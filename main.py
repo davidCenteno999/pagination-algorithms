@@ -27,8 +27,9 @@ class MMU:
         for i in range(numero_paginas):
             pagina = Pagina(identificador = self.obtener_id_pagina())
             if len(self.memoria_real) < 100:
-                pagina.direccion = self.direccion_memoria_real(pagina)
                 pagina.bandera = True
+                pagina.direccion = self.direccion_memoria_real(pagina)
+                
             else:
                 pagina.bandera = False
                 self.memoria_virtual.append(pagina)
@@ -58,7 +59,34 @@ class MMU:
                 else:
                     self.memoria_virtual.remove(pagina)
 
+    #-------------------------------------------------------------
+    #           Algoritmos
+    #------------------------------------------------------------
+    def fifo(self,pagina,ptr):
+        primer_ele = self.memoria_real[0]
+        pagina.direccion = primer_ele.direccion
+        pagina.bandera = True
+
+        self.memoria_real[0] = pagina
     
+    #def actualizar_memoria_virtual(self,pagina_remplazo,id):
+        
+                
+
+    def actualizar_map(self,pagina,ptr):
+        nueva_lista_paginas = []
+        for llave,valor in self.map_memoria.items():
+            if llave == ptr:
+                for ele in valor:
+                    if pagina.id == ele.id:
+                        nueva_lista_paginas.append(pagina)
+                    else:
+                        nueva_lista_paginas.append(ele)
+        self.map_memoria[ptr] = nueva_lista_paginas
+
+
+
+
     #-------------------------------------------------------------
     #           Funciones Auxiliares
     #------------------------------------------------------------
@@ -68,6 +96,7 @@ class MMU:
     
     def direccion_memoria_real(self,pagina):
         dir =  self.contador_paginas - 1
+        pagina.direccion = dir
         self.memoria_real[dir] = pagina
         return dir
     
