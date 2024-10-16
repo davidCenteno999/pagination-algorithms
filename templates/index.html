@@ -28,16 +28,16 @@
         <label for="manual">Input Method:</label><br>
         <input type="radio" id="manual" name="input-method" value="manual" checked onclick="toggleInputMethod()"> Manual Input<br>
         <input type="radio" id="file" name="input-method" value="file" onclick="toggleInputMethod()"> Upload File<br><br>
-
-        <!-- Campos para la entrada manual -->
-        <div id="manual-inputs">
-            <label for="algorithm">Algorithm:</label>
-            <select id="algorithm" name="algorithm">
+        <label for="algorithm">Algorithm:</label>
+            <select id="algorithm" name="algorithm" required>
                 <option value="FIFO">FIFO</option>
                 <option value="SC">SC</option>
                 <option value="MRU">MRU</option>
                 <option value="RANDOM">RANDOM</option>
             </select><br>
+        <!-- Campos para la entrada manual -->
+        <div id="manual-inputs">
+            
 
             <label for="seed">Seed:</label>
             <input type="number" id="seed" name="seed" required><br>
@@ -52,7 +52,7 @@
         <!-- Campo para la subida de archivo -->
         <div id="file-input" style="display: none;">
             <label for="file">Upload File:</label>
-            <input type="file" id="file" name="file"><br>
+            <input type="file" id="file" name="file" required><br>
         </div>
 
         <input type="submit" value="Simulate">

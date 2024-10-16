@@ -1,19 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Simulation Result</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados de la Simulación</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <h1>Simulation Result</h1>
-    
-    <!-- Mostrar el resultado dependiendo del método de entrada -->
-    {% if file_path %}
-        <p>Uploaded File: {{ form_data[0] }}</p>
-        <p><a href="{{ url_for('static', filename=file_path) }}">Download File</a></p>
-    {% else %}
-        <p>Algorithm: {{ form_data[0] }}</p>
-        <p>Processes: {{ form_data[1] }}</p>
-        <p>Operations: {{ form_data[2] }}</p>
-    {% endif %}
+    <div class="container mt-5">
+        <h1>Resultados de la Simulación</h1>
+        <h2>Datos Ingresados</h2>
+        <ul>
+            <li><strong>Algoritmo:</strong> {{ form_data[0] }}</li>
+            <li><strong>Cantidad de Procesos:</strong> {{ form_data[1] }}</li>
+            <li><strong>Cantidad de Operaciones:</strong> {{ form_data[2] }}</li>
+        </ul>
+
+        {% if errors %}
+            <h3>Errores Encontrados:</h3>
+            <ul class="list-group">
+                {% for error in errors %}
+                    <li class="list-group-item list-group-item-danger">{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <h3>Operaciones</h3>
+        {% if file_path %}
+            <p>Se leyeron las siguientes operaciones del archivo:</p>
+            <ul>
+                {% for operation in operations %}
+                    <li>{{ operation }}</li>
+                {% endfor %}
+            </ul>
+            <a href="{{ url_for('download_file', filename='operations.txt') }}" class="btn btn-primary">Descargar Archivo</a>
+        {% else %}
+            <p>Las siguientes operaciones fueron generadas:</p>
+            <ul>
+                {% for operation in operations %}
+                    <li>{{ operation }}</li>
+                {% endfor %}
+            </ul>
+            <a href="{{ url_for('download_file', filename='operations.txt') }}" class="btn btn-primary">Descargar Archivo</a>
+        {% endif %}
+
+        <hr>
+        <a href="/" class="btn btn-secondary">Volver a la Página Principal</a>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

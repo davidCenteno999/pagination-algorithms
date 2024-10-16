@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify
 import os
 import random
 import io
+import re
 
 app = Flask(__name__)
 
@@ -13,10 +14,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def index():
     return render_template('index.html')
 
-import random
-
-import random
-
 def generate_operations(processes, max_operations, seed):
     random.seed(seed)  # Establecer la semilla para la aleatoriedad
     operations_list = []
@@ -24,13 +21,11 @@ def generate_operations(processes, max_operations, seed):
     ptr_table = {}  # Tabla de símbolos para almacenar punteros y su estado
     created_processes = set()  # Conjunto para rastrear procesos creados
     used_kill = set()  # Conjunto para rastrear qué procesos han sido "kill"
-    options = list(range(1, processes+1))
+    options = list(range(1, processes + 1))
     operations = ['new', 'use', 'delete'] * 3 + ['kill']
-    print(options)
 
-    while total_operations < (max_operations - len(used_kill)):
+    while total_operations < max_operations :
         operation_type = random.choice(operations)
-        print(operations_list)
 
         if operation_type == 'new':
             if not options:
@@ -83,14 +78,22 @@ def generate_operations(processes, max_operations, seed):
                     if ptr in ptr_table:
                         del ptr_table[ptr]  
 
-    # Asegurarse de que se haga un "kill" a todos los procesos creados
-    for process_id in created_processes:
-        if process_id not in used_kill:
-            operations_list.append(f"kill({process_id})")
-            used_kill.add(process_id)
-
     return operations_list
 
+def validate_operations(operations_list):
+    valid_operations = {'new', 'use', 'delete', 'kill'}
+    errors = []
+
+    for operation in operations_list:
+        match = re.match(r'(\w+)\((\d+)(?:, (\d+))?\)', operation)
+        if match:
+            op_type = match.group(1)
+            if op_type not in valid_operations:
+                errors.append(f"Invalid operation type: {operation}")
+        else:
+            errors.append(f"Invalid operation format: {operation}")
+
+    return errors
 
 @app.route('/simulate', methods=['POST'])
 def simulate():
@@ -100,6 +103,7 @@ def simulate():
     form_data = []
     file_path = None
     operations_list = []
+    errors = []
 
     if input_method == 'manual':
         algorithm = request.form['algorithm']
@@ -112,6 +116,17 @@ def simulate():
         
         # Crear el arreglo con los datos ingresados manualmente
         form_data = [algorithm, processes, max_operations]
+        
+        # Guardar las operaciones generadas en un archivo
+        if operations_list:
+            file_content = "\n".join(operations_list)
+            file_name = "operations.txt"
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
+            
+            # Guardar el archivo en el servidor
+            with open(file_path, 'w') as f:
+                f.write(file_content)
+
     elif input_method == 'file':
         # Obtener el archivo subido
         file = request.files['file']
@@ -121,17 +136,27 @@ def simulate():
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
             file.save(file_path)
             
-            # Incluir el nombre del archivo en los datos de respuesta
-            form_data = [file.filename]
-    
-    # Crear un archivo en memoria con las operaciones generadas
-    if operations_list:
-        file_content = "\n".join(operations_list)
-        file_stream = io.BytesIO(file_content.encode('utf-8'))
-        return send_file(file_stream, as_attachment=True, download_name="operations.txt", mimetype='text/plain')
+            # Leer el contenido del archivo y validar operaciones
+            with open(file_path, 'r') as f:
+                operations_list = f.read().strip().splitlines()
+            
+            # Validar las operaciones del archivo
+            errors = validate_operations(operations_list)
+            if errors:
+                return render_template('result.html', form_data=form_data, file_path=file_path, errors=errors, operations=operations_list)
+
+    # Validar las operaciones generadas
+    validation_errors = validate_operations(operations_list)
+    if validation_errors:
+        return render_template('result.html', form_data=form_data, file_path=file_path, errors=validation_errors, operations=operations_list)
 
     # Retornar los datos en la plantilla de resultados
-    return render_template('result.html', form_data=form_data, file_path=file_path)
+    return render_template('result.html', form_data=form_data, file_path=file_path, errors=errors, operations=operations_list)
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename), as_attachment=True)
+
 
 if __name__ == '__main__':
     # Crear la carpeta de uploads si no existe
