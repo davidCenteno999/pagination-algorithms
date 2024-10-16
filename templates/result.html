@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simulation Result</title>
+</head>
+<body>
+    <h1>Simulation Result</h1>
+    
+    <!-- Mostrar el arreglo con los valores del formulario -->
+    <p>Algorithm: {{ form_data[0] }}</p>
+    <p>Processes: {{ form_data[1] }}</p>
+    <p>Operations: {{ form_data[2] }}</p>
+    
+    <!-- Mostrar el nombre del archivo subido -->
+    <p>Uploaded File: {{ form_data[3] }}</p>
+    
+    <!-- Si se subió un archivo, mostrar el enlace -->
+    {% if file_path %}
+        <p><a href="{{ url_for('static', filename=file_path) }}">Download File</a></p>
+    {% endif %}
+</body>
+</html>

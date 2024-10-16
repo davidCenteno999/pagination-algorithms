@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simulation</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    
+    <form action="/simulate" method="POST" enctype="multipart/form-data">
+        <h1>Simulation</h1>
+        
+        <label for="algorithm">Algorithm:</label>
+        <select id="algorithm" name="algorithm">
+            <option value="FIFO">FIFO</option>
+            <option value="SC">SC</option>
+            <option value="MRU">MRU</option>
+            <option value="Random">Random</option>
+        </select><br>
+
+        <label for="processes">Processes:</label>
+        <input type="number" id="processes" name="processes" required><br>
+
+        <label for="operations">Operations:</label>
+        <input type="number" id="operations" name="operations" required><br>
+        
+        <!-- Campo de subida de archivo -->
+        <label for="file">Archivo de Simulacion:</label>
+        <input type="file" id="file" name="file"><br>
+
+        <input type="submit" value="Simulate">
+    </form>
+</body>
+</html>

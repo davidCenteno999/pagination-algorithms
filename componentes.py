@@ -9,11 +9,12 @@ class MMU:
         self.map_memoria = {} #ptr asociado a sus paginas {ptr:[page1,pg2,pg3]}
         self.procesos = {} #Parecido a objeto de procesos {pid:[ptr,ptr2,ptr3]}
         self.punteros = {} #tabla de simbolos  {ptr:pid}
-        self.tipoAlgoritmo = 0
+        self.tipoAlgoritmo = tipoAlgoritmo
         self.total_time = 0
         self.thrashing_time =0
         self.used_RAM = 0
         self.used_VRAM = 0
+        self.used_pages = []
 
 
     
@@ -32,7 +33,7 @@ class MMU:
         ptr = len(self.map_memoria) + 1
         paginas = []
         for i in range(numero_paginas):
-            pagina = Pagina(self.obtener_id_pagina(),None,-1)
+            pagina = Pagina(self.obtener_id_pagina(),None,-1,0)
             if self.paginas_ocupadas_memoria_real() < (self.cantidadMaximaPaginas):
                 dir = self.direccion_espacio_libre_memoria_real()
                 pagina.bandera = True
@@ -61,8 +62,11 @@ class MMU:
         if ptr in self.map_memoria:
             paginas = self.map_memoria[ptr]
             for pagina in paginas:
+                pagina.mark = 1
                 if not pagina.bandera:
                     self.intercambio_paginas(pagina,self.tipoAlgoritmo)
+
+                self.used_pages.append(pagina)
         else:
             print("Punetero no encontrado.")
 
@@ -90,6 +94,8 @@ class MMU:
             self.fifo(pagina)
         if(self.tipoAlgoritmo == 1): #SC
             self.sc(pagina)
+        if(self.tipoAlgoritmo == 2): #MRU
+            self.MRU(pagina)
 
     #-------------------------------------------------------------
     #           Algoritmos
@@ -111,8 +117,36 @@ class MMU:
         #self.actualizar_map(pagina,ptr)
         #self.actualizar_map(pagina_remplazo,None)
 
+    def sc(self, pagina):
+         # Recorre las páginas en memoria real para encontrar una que reemplazar
+        while True:
+            pagina_actual = self.memoria_real[0] 
+
+            if pagina_actual.mark == 1:  
+                ele = self.memoria_real.pop(0)
+                ele.mark = 0 
+                self.memoria_real.append(ele)  
+            else:  
+                self.fifo(pagina)
+                break  
+    
+    def MRU(self, pagina):
+        self.memoria_virtual.remove(pagina)
+        if self.used_pages != []:
+            pagina_remplazo = self.used_pages.pop()
+            self.memoria_real.remove(pagina_remplazo)
+        else:
+            pagina_remplazo = self.memoria_real.pop(0)
         
-        
+        pagina.direccion = pagina_remplazo.direccion
+        pagina.bandera = True
+        pagina_remplazo.direccion = None
+        pagina_remplazo.bandera = False
+
+        self.memoria_real.append(pagina)
+        self.memoria_virtual.append(pagina_remplazo)
+
+
     def actualizar_memoria_virtual(self,pagina_remplazo,id):
         i = 0
         while i < len(self.memoria_virtual):
@@ -120,8 +154,6 @@ class MMU:
                 self.memoria_virtual[i] = pagina_remplazo
             i += 1  
 
-
-    # 
     def actualizar_map(self,pagina,ptr):
         nueva_lista_paginas = []
         for llave,valor in self.map_memoria.items():
@@ -182,6 +214,9 @@ class MMU:
         # Imprime memoria virtual
         print("\nMemoria virtual:")
         self.imprimir_paginas(self.memoria_virtual)  # Pasa la lista de páginas a imprimir
+
+        print("\nPaginas Utilizadas:")
+        self.imprimir_paginas(self.used_pages) 
         
         # Imprime map_memoria
         print("\nMapa de memoria (ptr -> páginas):")
