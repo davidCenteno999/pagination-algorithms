@@ -1,3 +1,5 @@
+import random
+
 class MMU:
     def __init__(self, size_RAM, size_pagina, tipoAlgoritmo):
         self.size_RAM = size_RAM # 400KB -> 100 paginas
@@ -96,6 +98,8 @@ class MMU:
             self.sc(pagina)
         if(self.tipoAlgoritmo == 2): #MRU
             self.MRU(pagina)
+        if(self.tipoAlgoritmo == 3): #RND
+            self.rnd(pagina)
 
     #-------------------------------------------------------------
     #           Algoritmos
@@ -145,6 +149,21 @@ class MMU:
 
         self.memoria_real.append(pagina)
         self.memoria_virtual.append(pagina_remplazo)
+
+    def rnd(self,pagina):
+        self.memoria_virtual.remove(pagina)
+        indice_remplazo = random.randint(0,self.paginas_ocupadas_memoria_real() - 1)
+        pagina_remplazo = self.memoria_real.pop(indice_remplazo)
+        
+        pagina.direccion = pagina_remplazo.direccion
+        pagina.bandera = True
+        pagina_remplazo.direccion = None
+        pagina_remplazo.bandera = False
+
+        self.memoria_real.insert(indice_remplazo,pagina)
+        self.memoria_virtual.append(pagina_remplazo)
+
+
 
 
     def actualizar_memoria_virtual(self,pagina_remplazo,id):

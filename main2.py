@@ -4,7 +4,7 @@ from componentes import MMU, Pagina
 #8192 -2
 #12288 -3
 
-MMU1 = MMU(16, 4, 2) #memoria total 3 paginas
+MMU1 = MMU(16, 4, 3) #memoria total 3 paginas
 
 
 
