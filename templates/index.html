@@ -8,7 +8,7 @@
             var manualInputs = document.getElementById('manual-inputs');
             var fileInput = document.getElementById('file-input');
             var inputMethod = document.querySelector('input[name="input-method"]:checked').value;
-            
+
             if (inputMethod === 'manual') {
                 manualInputs.style.display = 'block';
                 fileInput.style.display = 'none';
@@ -19,26 +19,26 @@
         }
     </script>
 </head>
-<body>
-    
+<body onload="toggleInputMethod()"> <!-- Asegura que la vista inicial sea correcta -->
+
     <form action="/simulate" method="POST" enctype="multipart/form-data">
         <h1>Simulation</h1>
-        
+
         <!-- Selección del método de entrada -->
         <label for="manual">Input Method:</label><br>
         <input type="radio" id="manual" name="input-method" value="manual" checked onclick="toggleInputMethod()"> Manual Input<br>
         <input type="radio" id="file" name="input-method" value="file" onclick="toggleInputMethod()"> Upload File<br><br>
+        
         <label for="algorithm">Algorithm:</label>
-            <select id="algorithm" name="algorithm" required>
-                <option value="FIFO">FIFO</option>
-                <option value="SC">SC</option>
-                <option value="MRU">MRU</option>
-                <option value="RANDOM">RANDOM</option>
-            </select><br>
+        <select id="algorithm" name="algorithm" required>
+            <option value="FIFO">FIFO</option>
+            <option value="SC">SC</option>
+            <option value="MRU">MRU</option>
+            <option value="RANDOM">RANDOM</option>
+        </select><br>
+
         <!-- Campos para la entrada manual -->
         <div id="manual-inputs">
-            
-
             <label for="seed">Seed:</label>
             <input type="number" id="seed" name="seed" required><br>
 
@@ -52,7 +52,7 @@
         <!-- Campo para la subida de archivo -->
         <div id="file-input" style="display: none;">
             <label for="file">Upload File:</label>
-            <input type="file" id="file" name="file" required><br>
+            <input type="file" id="file" name="file"><br>
         </div>
 
         <input type="submit" value="Simulate">
