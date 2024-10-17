@@ -17,6 +17,7 @@ class MMU:
         self.used_RAM = 0
         self.used_VRAM = 0
         self.used_pages = []
+        self.future_pages = []
 
 
     
@@ -147,7 +148,7 @@ class MMU:
         pagina_remplazo.direccion = None
         pagina_remplazo.bandera = False
 
-        self.memoria_real.append(pagina)
+        self.memoria_real.insert(pagina_remplazo.direccion,pagina)
         self.memoria_virtual.append(pagina_remplazo)
 
     def rnd(self,pagina):
@@ -164,28 +165,32 @@ class MMU:
         self.memoria_virtual.append(pagina_remplazo)
 
 
+    def opt(self, pagina):
+        self.memoria_virtual.remove(pagina)
+        pagina_remplazo = self.opt_out_page()
+        self.memoria_real.remove(pagina_remplazo)
+        pagina.direccion = pagina_remplazo.direccion
+        pagina.bandera = True
+        pagina_remplazo.direccion = None
+        pagina_remplazo.bandera = False
 
+    def opt_out_page(self): #Falta optimizar, mientras se usa un pagina quitarla del array de futuras paginas a usar
+        out_page = None
+        out_index = -1
+        for pagina in self.memoria_real:
+            page_found=0
+            for i in range(0,len(self.future_pages)):
 
-    def actualizar_memoria_virtual(self,pagina_remplazo,id):
-        i = 0
-        while i < len(self.memoria_virtual):
-            if self.memoria_virtual[i].id == id:
-                self.memoria_virtual[i] = pagina_remplazo
-            i += 1  
-
-    def actualizar_map(self,pagina,ptr):
-        nueva_lista_paginas = []
-        for llave,valor in self.map_memoria.items():
-            if llave == ptr:
-                for ele in valor:
-                    if pagina.id == ele.id:
-                        nueva_lista_paginas.append(pagina)
-                    else:
-                        nueva_lista_paginas.append(ele)
-        self.map_memoria[ptr] = nueva_lista_paginas
-
-    #
-
+                if(self.future_pages[i].id == pagina.id):
+                    page_found=1
+                    if(out_index < i):
+                        out_index = i
+                        out_page = pagina
+            if(page_found==0):
+                out_index = -1
+                out_page = pagina
+                break
+        return out_page
 
     #-------------------------------------------------------------
     #           Funciones Auxiliares
