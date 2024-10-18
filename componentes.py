@@ -10,6 +10,11 @@ class MMU:
         self.map_memoria = {} #ptr asociado a sus paginas {ptr:[page1,pg2,pg3]}
         self.procesos = {} #Parecido a objeto de procesos {pid:[ptr,ptr2,ptr3]}
         self.punteros = {} #tabla de simbolos  {ptr:pid}
+        self.total_punteros = 1
+        self.total_paginas = 0
+        self.total_procesos = 0
+        self.simTime = 0
+        self.paginas_real = 0
         self.tipoAlgoritmo = tipoAlgoritmo
         self.total_time = 0
         self.thrashing_time =0
@@ -32,25 +37,32 @@ class MMU:
         #Numero de paginas
         numero_paginas = (size//4096) + (1 if size%4096!=0 else 0)
         #Generar puntero
-        ptr = len(self.map_memoria) + 1
+        ptr = self.total_punteros
+        self.total_punteros+=1
         paginas = []
         for i in range(numero_paginas):
-            pagina = Pagina(self.obtener_id_pagina(),None,-1,0)
-            if self.paginas_ocupadas_memoria_real() < (self.cantidadMaximaPaginas):
-                dir = self.direccion_espacio_libre_memoria_real()
+            pagina = Pagina(self.obtener_id_pagina(),None,-1,0,pid,ptr)
+            if self.paginas_real < (self.cantidadMaximaPaginas):
+                self.used_RAM+=4
+                dir = self.paginas_real
                 pagina.bandera = True
                 pagina.direccion = dir
                 self.memoria_real[dir] = pagina
+                self.paginas_real+=1
+                self.total_paginas+=1
                 
             else:
+                self.used_VRAM+=round(size/4096)
                 pagina.bandera = False
                 self.memoria_virtual.append(pagina)
+                self.total_paginas+=4
             paginas.append(pagina)
             
         self.map_memoria[ptr] = paginas
         
         if pid not in self.procesos:
             self.procesos[pid] = [ptr] #Crear proceso
+            self.total_procesos+=1
         else:
             self.procesos[pid].append(ptr) #Agregar ptr a proceso si ya existe
 
@@ -65,10 +77,18 @@ class MMU:
             paginas = self.map_memoria[ptr]
             for pagina in paginas:
                 pagina.mark = 1
+                print("TAMANO")
+                print(len(paginas))
                 if not pagina.bandera:
-                    self.intercambio_paginas(pagina,self.tipoAlgoritmo)
+                    print("PAGINA USAR")
+                    print(pagina)
+                    self.intercambio_paginas(pagina)
+                    self.simTime+=5
+                    self.thrashing_time+=5
 
                 self.used_pages.append(pagina)
+                self.future_pages.pop(0)
+                self.simTime+=1
         else:
             print("Punetero no encontrado.")
 
@@ -79,9 +99,14 @@ class MMU:
             for pagina in paginas:
                 if pagina.bandera:
                     #self.memoria_real[pagina.direccion] = None
-                    self.memoria_real.remove(pagina)
+                    self.memoria_real[pagina.direccion] = None
+                    self.paginas_real-=1
+                    self.total_paginas-=1
+                    self.used_RAM-=4
                 else:
                     self.memoria_virtual.remove(pagina)
+                    self.total_paginas-=1
+                    self.used_VRAM-=4
 
         pid = self.punteros[ptr] # Encontrar el proceso asociado al ptr
         self.procesos[pid].remove(ptr) #Eliminar ptr del proceso
@@ -91,7 +116,7 @@ class MMU:
             self.delete(ptr)
         self.procesos.pop(pid)
 
-    def intercambio_paginas(self,pagina,tipo):
+    def intercambio_paginas(self,pagina):
 
         if(self.tipoAlgoritmo == 0): #FIFO
             self.fifo(pagina)
@@ -109,8 +134,10 @@ class MMU:
     #------------------------------------------------------------
     def fifo(self,pagina):
         self.memoria_virtual.remove(pagina)
-        pagina_remplazo = self.memoria_real.pop(0)
-
+        for page in self.memoria_real:
+            if page:
+                pagina_remplazo = page
+                break 
         pagina.direccion = pagina_remplazo.direccion
         pagina.bandera = True
         pagina_remplazo.direccion = None
@@ -168,6 +195,8 @@ class MMU:
 
 
     def opt(self, pagina):
+        print("PAGINA ELIMINAR")
+        print(pagina)
         self.memoria_virtual.remove(pagina)
         pagina_remplazo = self.opt_out_page()
         self.memoria_real.remove(pagina_remplazo)
@@ -180,23 +209,31 @@ class MMU:
         out_page = None
         out_index = -1
         for pagina in self.memoria_real:
-            page_found=0
-            for i in range(0,len(self.future_pages)):
+            if pagina:
+                page_found=0
+                for i in range(0,len(self.future_pages)):
 
-                if(self.future_pages[i].id == pagina.id):
-                    page_found=1
-                    if(out_index < i):
-                        out_index = i
-                        out_page = pagina
-            if(page_found==0):
-                out_index = -1
-                out_page = pagina
-                break
+                    if(self.future_pages[0] == pagina.id):
+                        page_found=1
+                        if(out_index < i):
+                            out_index = i
+                            out_page = pagina
+                        continue
+                if(page_found==0):
+                    out_index = -1
+                    out_page = pagina
+                    break
+        print("PAGINA SALIDA:")
+        print(out_page)
         return out_page
 
     #-------------------------------------------------------------
     #           Funciones Auxiliares
     #------------------------------------------------------------
+
+    def set_future_pages(self,future_pages):
+        self.future_pages = future_pages
+
     def obtener_id_pagina(self):
         self.contador_paginas += 1
         return self.contador_paginas
@@ -220,11 +257,11 @@ class MMU:
         
     def imprimir_paginas(self, paginas):
         """Imprime las páginas en una lista, manejando si es None."""
-        for i, pagina in enumerate(paginas):
-            if pagina:
-                print(f"  Posición {i}: {pagina}")
-            else:
-                print(f"  Posición {i}: Vacía")
+        for i in range(0,len(paginas)):
+            if paginas[i]:
+                print(f"  Posición {i}: {paginas[i]}")
+            #else:
+            #    print(f"  Posición {i}: Vacía")
 
     def imprimir_atributos(self):
         # Imprime los atributos básicos
@@ -241,15 +278,14 @@ class MMU:
         print("\nMemoria virtual:")
         self.imprimir_paginas(self.memoria_virtual)  # Pasa la lista de páginas a imprimir
 
-        print("\nPaginas Utilizadas:")
-        self.imprimir_paginas(self.used_pages) 
         
         # Imprime map_memoria
+        
         print("\nMapa de memoria (ptr -> páginas):")
         for ptr, paginas in self.map_memoria.items():
             print(f"  Puntero {ptr}:")
             self.imprimir_paginas(paginas)  # Pasa la lista de páginas a imprimir
-
+        
         # Imprime procesos
         print("\nProcesos (pid -> ptrs):")
         for pid, ptrs in self.procesos.items():
@@ -261,35 +297,34 @@ class MMU:
         print("\nPunteros (ptr -> pid):")
         for ptr, pid in self.punteros.items():
             print(f"  Puntero {ptr}: Proceso {pid}")
+            
 
     
-    def get_opt_state(self):
+    def get_pages_state(self):
         # Retorna el estado actual de las páginas cargadas para el algoritmo OPT
-        print(self.memoria_real)
+        #print(self.memoria_real)
         pages = []
         for page in self.memoria_real:
             if page != None:
-                pages.append({'page_id': page.id, 'pid': 0, 'loaded': 0,
-                'l_addr': 0, 'm_addr': page.direccion, 'd_addr': 0,
+                pages.append({'page_id': page.id, 'pid': page.pid, 'loaded': page.bandera,
+                'l_addr': page.ptr, 'm_addr': page.direccion, 'd_addr': 0,
                 'loaded_t': 0, 'mark': page.mark})
         return pages
     
-    def get_alg_state(self):
-        # Retorna el estado para otro algoritmo de reemplazo
-        print(self.memoria_real)
-        pages = []
-        for page in self.memoria_real:
-            if page != None:
-                pages.append({'page_id': page.id, 'pid': 0, 'loaded': 0,
-                'l_addr': 0, 'm_addr': page.direccion, 'd_addr': 0,
-                'loaded_t': 0, 'mark': page.mark})
-        return pages
     
     def get_summary_1(self):
         # Resumen personalizado
         return {
-            'total_pages': len(self.memoria_real),
-            'free_frames': 0
+            'total_pages': self.total_paginas,
+            'free_frames': 0,
+            'loaded_pages': self.paginas_real,
+            'processes': self.total_procesos,
+            'simTime': self.simTime,
+            'thrashing': self.thrashing_time,
+            'usedRam': self.used_RAM,
+            'usedRamPer': (self.used_RAM/self.size_RAM)*100,
+            'usedVRam': self.used_VRAM
+
         }
         
     def get_summary_2(self):
@@ -300,11 +335,13 @@ class MMU:
         }
 
 class Pagina:
-    def __init__(self, id, direccion, bandera, mark):
+    def __init__(self, id, direccion, bandera, mark, pid, ptr):
         self.id = id
         self.direccion = direccion
         self.bandera = bandera
         self.mark = mark
+        self.pid = pid
+        self.ptr = ptr
     
     
     def __str__(self):

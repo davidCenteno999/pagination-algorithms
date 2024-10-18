@@ -81,6 +81,8 @@
 </head>
 <body>
     <h2>MMU Visualization</h2>
+    <button id="continue-btn">Continue</button>
+    <h3>Current Operation: <span id="current-operation"></span></h3>
 
     <!-- Memory Bars for RAM OPT and RAM ALG -->
     <div class="memory-bars bar-opt">
@@ -164,6 +166,7 @@
         function updateTables(data) {
             const optTableBody = document.getElementById('opt-body');
             const algTableBody = document.getElementById('alg-body');
+            const currentOperationSpan = document.getElementById('current-operation');
 
             // Clear the previous table data
             optTableBody.innerHTML = '';
@@ -203,12 +206,32 @@
             document.getElementById('summary-1').innerHTML = `
                 <tr><td>Total Pages</td><td>${data.summary_1.total_pages}</td></tr>
                 <tr><td>Free Frames</td><td>${data.summary_1.free_frames}</td></tr>
+                <tr><td>Loaded Pages</td><td>${data.summary_1.loaded_pages}</td></tr>
+                <tr><td>Processes</td><td>${data.summary_1.processes}</td></tr>
+                <tr><td>Sim-Time</td><td>${data.summary_1.simTime}s</td></tr>
+                <tr><td>Thrashing</td><td>${data.summary_1.thrashing}s</td></tr>
+                <tr><td>RAM KB</td><td>${data.summary_1.usedRam}</td></tr>
+                <tr><td>RAM %</td><td>${data.summary_1.usedRamPer}</td></tr>
+                <tr><td>VRAM KB</td><td>${data.summary_1.usedVRam}</td></tr>
             `;
             document.getElementById('summary-2').innerHTML = `
                 <tr><td>Used Frames</td><td>${data.summary_2.used_frames}</td></tr>
                 <tr><td>Algorithm</td><td>${data.summary_2.algorithm}</td></tr>
+                <tr><td>Loaded Pages</td><td>${data.summary_1.loaded_pages}</td></tr>
             `;
+            currentOperationSpan.innerText = data.current_operation;
         }
+    </script>
+    
+
+    <script>
+    document.getElementById("continue-btn").addEventListener("click", function() {
+        fetch('/continue')
+        .then(response => response.json())
+        .then(data => {
+            console.log("Simulation continued:", data);
+        });
+    });
     </script>
 </body>
 </html>

@@ -16,9 +16,18 @@ MMU2 = None
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+
+paused = False
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/continue')
+def continue_simulation():
+    global paused
+    paused = False  # Se reanuda la simulación
+    return jsonify({"status": "continue"})
 
 def initialize_MMU(algorithm):
     global MMU1
@@ -33,15 +42,15 @@ def initialize_MMU(algorithm):
     else:
         algo = 3
     # Aquí inicializamos la MMU con el algoritmo seleccionado
-    MMU1 = MMU(16, 4, algo)
-    MMU2 = MMU(16, 4, 4)
+    MMU1 = MMU(400, 4, algo)
+    MMU2 = MMU(400, 4, 4)
 
-def generate_operations(processes, max_operations, seed):
+def generate_operations(processes, max_operations, seed, filename='operations_generate.txt'):
     random.seed(seed)  # Establecer la semilla para la aleatoriedad
     operations_list = []
     total_operations = 0
     total_processes = 0
-    total_ptr = 0
+    total_ptr = 1
     total_pages = 1
     operations_per_process = (max_operations // processes) - 1
     ptr_table = {}  # Tabla de símbolos para almacenar punteros y su estado
@@ -141,8 +150,11 @@ def generate_operations(processes, max_operations, seed):
     print(operations_per_process)
     print(total_pages)
     print(used_pages)
+    with open(filename, 'w') as file:
+        for operation in operations_list:
+            file.write(f"{operation}\n")
 
-    return operations_list
+    return operations_list, used_pages
 
 def validate_operations(operations_list):
     valid_operations = {'new', 'use', 'delete', 'kill'}
@@ -161,6 +173,8 @@ def validate_operations(operations_list):
 
 @app.route('/simulate', methods=['POST'])
 def simulate():
+    global MMU1
+    global MMU2
     input_method = request.form['input-method']
     operations_list = []
     errors = []
@@ -173,8 +187,11 @@ def simulate():
         processes = int(request.form['processes'])
         seed = int(request.form['seed'])
         max_operations = int(request.form['operations'])
+        
 
-        operations_list = generate_operations(processes, max_operations, seed)
+        operations_list, future_pages = generate_operations(processes, max_operations, seed)
+        MMU1.set_future_pages(future_pages)
+        MMU2.set_future_pages(future_pages)
 
     elif input_method == 'file':
         file = request.files['file']
@@ -201,8 +218,11 @@ def simulate_stream():
 
     def generate():
         pattern = r'(\w+)\(([^,]*),?([^)]*)\)'  # Captura un primer argumento y un segundo opcional
-
+        line_number = 1
         for operation in operations_list:
+            global paused
+            while paused:
+                time.sleep(0.1)  # Esperar a que se reanude
             match = re.match(pattern, operation)
             
             if match:
@@ -210,7 +230,7 @@ def simulate_stream():
                 first_arg = int(match.group(2))  # Primer argumento
                 second_arg = int(match.group(3)) if match.group(3) else None  # Segundo argumento opcional
 
-                print(f'Operation: {operation_type}, First Arg: {first_arg}, Second Arg: {second_arg}')
+                #print(f'Operation: {operation_type}, First Arg: {first_arg}, Second Arg: {second_arg}')
 
                 # Ejecutar la operación según el tipo
                 if operation_type == "new":
@@ -230,17 +250,22 @@ def simulate_stream():
                     MMU1.kill(first_arg)  # first_arg = pid
                     MMU2.kill(first_arg)
 
-                mmu_state = {
-                    'opt': MMU1.get_opt_state(),  # Obtener el estado del algoritmo OPT
-                    'alg': MMU2.get_alg_state(),  # Obtener el estado de otro algoritmo
-                    'summary_1': MMU1.get_summary_1(),  # Resumen 1
-                    'summary_2': MMU2.get_summary_1()   # Resumen 2
-                }
 
+                MMU1.imprimir_atributos()
+                mmu_state = {
+                    'opt': MMU1.get_pages_state(),  # Obtener el estado del algoritmo OPT
+                    'alg': MMU2.get_pages_state(),  # Obtener el estado de otro algoritmo
+                    'summary_1': MMU1.get_summary_1(),  # Resumen 1
+                    'summary_2': MMU2.get_summary_1(),   # Resumen 2
+                    'current_operation': f"{line_number}: {operation}"
+                }
                 # Enviar los datos en formato SSE (Server-Sent Events) al cliente
-                print(mmu_state)
-                time.sleep(1)  # Simular el tiempo entre cada operación
+                #print(mmu_state)
+                  # Simular el tiempo entre cada operación
+                line_number += 1
+                paused = True
                 yield f"data:{json.dumps(mmu_state)}\n\n"
+        
 
     return Response(generate(), mimetype='text/event-stream')
 
