@@ -29,23 +29,6 @@
         .lightyellow { background-color: lightyellow; }
         .peachpuff { background-color: peachpuff; }
 
-        table {
-            border-collapse: collapse;
-            width: 48%;
-            margin: 20px 1%;
-            float: left;
-            text-align: center;
-        }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-
-        th {
-            background-color: #f2f2f2;
-        }
-
         .summary-table {
             width: 30%;
             float: left;
@@ -69,30 +52,31 @@
             margin: 20px 1%;
             float: left;
             text-align: center;
-            height: 400px; /* Ajusta la altura para mostrar aproximadamente 20 filas */
-            overflow-y: auto; /* Permitir desplazamiento vertical */
-            display: block; /* Asegura que se aplique el scroll solo al cuerpo de la tabla */
-        }
-
-        tbody {
-            display: block; /* Necesario para que el cuerpo tenga un scroll independiente */
-            height: 360px;  /* Ajustar la altura del cuerpo para permitir el desplazamiento */
-            overflow-y: auto; /* Desplazamiento vertical solo en el cuerpo */
+            display: block; /* Asegura el scroll en el tbody */
         }
 
         thead, tbody tr {
-            display: table; /* Mantener la estructura de tabla para que las columnas sigan alineadas */
-            width: 100%; /* Ajusta el ancho al 100% para que el encabezado y el cuerpo coincidan */
+            display: table;
+            width: 100%;
+            table-layout: fixed; /* Para mantener el tamaño fijo de las celdas */
+        }
+
+        tbody {
+            display: block;
+            height: 500px; /* Altura ajustada para ver 20 filas */
+            overflow-y: scroll; /* Desplazamiento vertical */
         }
 
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
+            height: 25px; /* Ajuste de altura para cada fila (25px aprox) */
         }
 
         th {
             background-color: #f2f2f2;
         }
+
     </style>
 </head>
 <body>
