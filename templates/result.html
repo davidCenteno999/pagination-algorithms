@@ -1,52 +1,200 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultados de la Simulación</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>MMU Visualization Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h2 {
+            text-align: center;
+        }
+        .memory-bars {
+            width: 100%;
+            height: 30px;
+            margin: 10px 0;
+            display: flex;
+        }
+        .memory-bars div {
+            height: 100%;
+        }
+        .bar-opt div, .bar-alg div { flex: 1; }
+        
+        /* Colores */
+        .lightblue { background-color: lightblue; }
+        .lightgreen { background-color: lightgreen; }
+        .lightcoral { background-color: lightcoral; }
+        .lightyellow { background-color: lightyellow; }
+        .peachpuff { background-color: peachpuff; }
+
+        table {
+            border-collapse: collapse;
+            width: 48%;
+            margin: 20px 1%;
+            float: left;
+            text-align: center;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .summary-table {
+            width: 30%;
+            float: left;
+            margin: 20px 10px;
+        }
+
+        .highlight-red {
+            background-color: lightcoral;
+        }
+
+        .highlight-yellow {
+            background-color: lightyellow;
+        }
+
+        .highlight-green {
+            background-color: lightgreen;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1>Resultados de la Simulación</h1>
-        <h2>Datos Ingresados</h2>
-        <ul>
-        </ul>
+    <h2>MMU Visualization</h2>
 
-        {% if errors %}
-            <h3>Errores Encontrados:</h3>
-            <ul class="list-group">
-                {% for error in errors %}
-                    <li class="list-group-item list-group-item-danger">{{ error }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-
-        <h3>Operaciones</h3>
-        {% if file_path %}
-            <p>Se leyeron las siguientes operaciones del archivo:</p>
-            <ul>
-                {% for operation in operations %}
-                    <li>{{ operation }}</li>
-                {% endfor %}
-            </ul>
-            <a href="{{ url_for('download_file', filename='operations.txt') }}" class="btn btn-primary">Descargar Archivo</a>
-        {% else %}
-            <p>Las siguientes operaciones fueron generadas:</p>
-            <ul>
-                {% for operation in operations %}
-                    <li>{{ operation }}</li>
-                {% endfor %}
-            </ul>
-            <a href="{{ url_for('download_file', filename='operations.txt') }}" class="btn btn-primary">Descargar Archivo</a>
-        {% endif %}
-
-        <hr>
-        <a href="/" class="btn btn-secondary">Volver a la Página Principal</a>
+    <!-- Memory Bars for RAM OPT and RAM ALG -->
+    <div class="memory-bars bar-opt">
+        <!-- The bars for OPT algorithm will be updated dynamically here -->
+    </div>
+    <div class="memory-bars bar-alg">
+        <!-- The bars for ALG algorithm will be updated dynamically here -->
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Tables for MMU-OPT and MMU-[ALG] -->
+    <table id="opt-table">
+        <thead>
+            <tr>
+                <th>PAGE ID</th>
+                <th>PID</th>
+                <th>LOADED</th>
+                <th>L-ADDR</th>
+                <th>M-ADDR</th>
+                <th>D-ADDR</th>
+                <th>LOADED-T</th>
+                <th>MARK</th>
+            </tr>
+        </thead>
+        <tbody id="opt-body">
+            <!-- OPT algorithm data will be dynamically inserted here -->
+        </tbody>
+    </table>
+
+    <table id="alg-table">
+        <thead>
+            <tr>
+                <th>PAGE ID</th>
+                <th>PID</th>
+                <th>LOADED</th>
+                <th>L-ADDR</th>
+                <th>M-ADDR</th>
+                <th>D-ADDR</th>
+                <th>LOADED-T</th>
+                <th>MARK</th>
+            </tr>
+        </thead>
+        <tbody id="alg-body">
+            <!-- ALG algorithm data will be dynamically inserted here -->
+        </tbody>
+    </table>
+
+    <!-- Summary Tables -->
+    <table class="summary-table" id="summary-1">
+        <!-- Summary data for OPT algorithm will be dynamically inserted here -->
+    </table>
+
+    <table class="summary-table" id="summary-2">
+        <!-- Summary data for ALG algorithm will be dynamically inserted here -->
+    </table>
+
+    <script>
+        // Function to send actions to the MMU server
+        /*function sendMMUAction(action, pid = null, ptr = null, size = null) {
+            fetch('/simulate_stream', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action, pid, ptr, size })
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateTables(data);
+            });
+        }*/
+        document.addEventListener("DOMContentLoaded", function() {
+            const eventSource = new EventSource("/simulate_stream");
+
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);  // Convertir los datos JSON enviados por el servidor
+                updateTables(data);  // Actualizar las tablas y las barras de memoria
+            };
+        });
+
+        // Function to update the tables and summary data based on the MMU state
+        function updateTables(data) {
+            const optTableBody = document.getElementById('opt-body');
+            const algTableBody = document.getElementById('alg-body');
+
+            // Clear the previous table data
+            optTableBody.innerHTML = '';
+            algTableBody.innerHTML = '';
+
+            // Fill the OPT table with new data
+            data.opt.forEach(page => {
+                const row = `<tr>
+                                <td>${page.page_id}</td>
+                                <td>${page.pid}</td>
+                                <td>${page.loaded}</td>
+                                <td>${page.l_addr}</td>
+                                <td>${page.m_addr}</td>
+                                <td>${page.d_addr}</td>
+                                <td>${page.loaded_t}</td>
+                                <td>${page.mark}</td>
+                            </tr>`;
+                optTableBody.innerHTML += row;
+            });
+
+            // Fill the ALG table with new data
+            data.alg.forEach(page => {
+                const row = `<tr>
+                                <td>${page.page_id}</td>
+                                <td>${page.pid}</td>
+                                <td>${page.loaded}</td>
+                                <td>${page.l_addr}</td>
+                                <td>${page.m_addr}</td>
+                                <td>${page.d_addr}</td>
+                                <td>${page.loaded_t}</td>
+                                <td>${page.mark}</td>
+                            </tr>`;
+                algTableBody.innerHTML += row;
+            });
+
+            // Update the summary tables
+            document.getElementById('summary-1').innerHTML = `
+                <tr><td>Total Pages</td><td>${data.summary_1.total_pages}</td></tr>
+                <tr><td>Free Frames</td><td>${data.summary_1.free_frames}</td></tr>
+            `;
+            document.getElementById('summary-2').innerHTML = `
+                <tr><td>Used Frames</td><td>${data.summary_2.used_frames}</td></tr>
+                <tr><td>Algorithm</td><td>${data.summary_2.algorithm}</td></tr>
+            `;
+        }
+    </script>
 </body>
 </html>

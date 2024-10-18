@@ -1,5 +1,4 @@
 import random
-
 class MMU:
     def __init__(self, size_RAM, size_pagina, tipoAlgoritmo):
         self.size_RAM = size_RAM # 400KB -> 100 paginas
@@ -79,7 +78,8 @@ class MMU:
             paginas = self.map_memoria.pop(ptr)
             for pagina in paginas:
                 if pagina.bandera:
-                    self.memoria_real[pagina.direccion] = None
+                    #self.memoria_real[pagina.direccion] = None
+                    self.memoria_real.remove(pagina)
                 else:
                     self.memoria_virtual.remove(pagina)
 
@@ -101,6 +101,8 @@ class MMU:
             self.MRU(pagina)
         if(self.tipoAlgoritmo == 3): #RND
             self.rnd(pagina)
+        if(self.tipoAlgoritmo == 4): #OPT
+            self.opt(pagina)
 
     #-------------------------------------------------------------
     #           Algoritmos
@@ -123,7 +125,7 @@ class MMU:
         #self.actualizar_map(pagina_remplazo,None)
 
     def sc(self, pagina):
-         # Recorre las páginas en memoria real para encontrar una que reemplazar
+        # Recorre las páginas en memoria real para encontrar una que reemplazar
         while True:
             pagina_actual = self.memoria_real[0] 
 
@@ -259,6 +261,43 @@ class MMU:
         print("\nPunteros (ptr -> pid):")
         for ptr, pid in self.punteros.items():
             print(f"  Puntero {ptr}: Proceso {pid}")
+
+    
+    def get_opt_state(self):
+        # Retorna el estado actual de las páginas cargadas para el algoritmo OPT
+        print(self.memoria_real)
+        pages = []
+        for page in self.memoria_real:
+            if page != None:
+                pages.append({'page_id': page.id, 'pid': 0, 'loaded': 0,
+                'l_addr': 0, 'm_addr': page.direccion, 'd_addr': 0,
+                'loaded_t': 0, 'mark': page.mark})
+        return pages
+    
+    def get_alg_state(self):
+        # Retorna el estado para otro algoritmo de reemplazo
+        print(self.memoria_real)
+        pages = []
+        for page in self.memoria_real:
+            if page != None:
+                pages.append({'page_id': page.id, 'pid': 0, 'loaded': 0,
+                'l_addr': 0, 'm_addr': page.direccion, 'd_addr': 0,
+                'loaded_t': 0, 'mark': page.mark})
+        return pages
+    
+    def get_summary_1(self):
+        # Resumen personalizado
+        return {
+            'total_pages': len(self.memoria_real),
+            'free_frames': 0
+        }
+        
+    def get_summary_2(self):
+        # Otro resumen personalizado
+        return {
+            'used_frames': len(self.memoria_real),
+            'algorithm': self.tipoAlgoritmo
+        }
 
 class Pagina:
     def __init__(self, id, direccion, bandera, mark):
