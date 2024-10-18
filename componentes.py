@@ -41,7 +41,7 @@ class MMU:
         self.total_punteros+=1
         paginas = []
         for i in range(numero_paginas):
-            pagina = Pagina(self.obtener_id_pagina(),None,-1,0,pid,ptr)
+            pagina = Pagina(self.obtener_id_pagina(),None,-1,0,pid,ptr,self.simTime)
             if self.paginas_real < (self.cantidadMaximaPaginas):
                 self.used_RAM+=4
                 dir = self.paginas_real
@@ -308,7 +308,7 @@ class MMU:
             if page != None:
                 pages.append({'page_id': page.id, 'pid': page.pid, 'loaded': page.bandera,
                 'l_addr': page.ptr, 'm_addr': page.direccion, 'd_addr': 0,
-                'loaded_t': 0, 'mark': page.mark})
+                'loaded_t': page.loadTime, 'mark': page.mark})
         return pages
     
     
@@ -335,13 +335,14 @@ class MMU:
         }
 
 class Pagina:
-    def __init__(self, id, direccion, bandera, mark, pid, ptr):
+    def __init__(self, id, direccion, bandera, mark, pid, ptr, loadTime):
         self.id = id
         self.direccion = direccion
         self.bandera = bandera
         self.mark = mark
         self.pid = pid
         self.ptr = ptr
+        self.loadTime = loadTime
     
     
     def __str__(self):
