@@ -40,7 +40,7 @@
         }
 
         .highlight-yellow {
-            background-color: lightyellow;
+            background-color: rgb(227, 227, 148);
         }
 
         .highlight-green {
@@ -63,7 +63,7 @@
 
         tbody {
             display: block;
-            height: 500px; /* Altura ajustada para ver 20 filas */
+            height: 200px; /* Altura ajustada para ver 20 filas */
             overflow-y: scroll; /* Desplazamiento vertical */
         }
 
@@ -76,11 +76,57 @@
         th {
             background-color: #f2f2f2;
         }
+        .top-table-custom {
+            width: 100%;
+            margin: 20px 0;
+            text-align: center;
+            border: 2px solid #000; /* Borde más grueso y verde */
+            table-layout: fixed; /* Asegura el ancho fijo de las celdas */
+            overflow: hidden;
+        }
+
+        .top-table-custom td {
+            border: 2px solid #000;
+            padding: 8px;
+            font-weight: bold;
+            
+            width: 1%; /* Celdas estrechas */
+        }
+        .top-table-custom2 {
+            width: 100%;
+            margin: 20px 0;
+            text-align: center;
+            border: 2px solid #000; /* Borde más grueso y verde */
+            table-layout: fixed; /* Asegura el ancho fijo de las celdas */
+            overflow: hidden;
+        }
+
+        .top-table-custom2 td {
+            border: 2px solid #000;
+            padding: 8px;
+            font-weight: bold;
+            
+            width: 1%; /* Celdas estrechas */
+        }
 
     </style>
 </head>
 <body>
     <h2>MMU Visualization</h2>
+
+    <!-- New Top Table with 1 Row and 100 Columns -->
+    <table class="top-table-custom">
+        <tr id="top-row">
+            <!-- Cells will be dynamically inserted here -->
+        </tr>
+    </table>
+
+    <table class="top-table-custom2">
+        <tr id="top-row2">
+            <!-- Cells will be dynamically inserted here -->
+        </tr>
+    </table>
+
     <button id="continue-btn">Continue</button>
     <h3>Current Operation: <span id="current-operation"></span></h3>
 
@@ -139,6 +185,71 @@
     </table>
 
     <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const topRow = document.getElementById('top-row');
+            const topRow2 = document.getElementById('top-row2');
+            
+            for (let i = 0; i < 100; i++) {
+                const cell = document.createElement('td');
+                topRow.appendChild(cell);
+            }
+            for (let i = 0; i < 100; i++) {
+                const cell = document.createElement('td');
+                topRow2.appendChild(cell);
+            }
+            
+
+            // Inicializa la conexión con el servidor para los datos de la MMU
+            const eventSource = new EventSource("/simulate_stream");
+            
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);  // Convertir los datos JSON enviados por el servidor
+                
+                // Actualizar las celdas según los datos de `data.opt`
+                data.opt.forEach((page, index) => {
+                    const cell = topRow.children[index];  // Obtener la celda correspondiente
+                    
+                    // Limpiar cualquier clase previa
+                    cell.classList.remove('highlight-green', 'highlight-yellow', 'highlight-red');
+                    
+                    // Definir la clase según el valor de `page.pid % 3`
+                    let rowClass = '';
+                    const resultado = page.pid % 3;
+                    if (resultado === 0) {
+                        rowClass = 'highlight-green';
+                    } else if (resultado === 1) {
+                        rowClass = 'highlight-yellow';
+                    } else {
+                        rowClass = 'highlight-red';
+                    }
+                    
+                    // Aplicar la nueva clase a la celda
+                    cell.classList.add(rowClass);
+                });
+                data.alg.forEach((page, index) => {
+                    const cell = topRow2.children[index];  // Obtener la celda correspondiente
+                    
+                    // Limpiar cualquier clase previa
+                    cell.classList.remove('highlight-green', 'highlight-yellow', 'highlight-red');
+                    
+                    // Definir la clase según el valor de `page.pid % 3`
+                    let rowClass = '';
+                    const resultado = page.pid % 3;
+                    if (resultado === 0) {
+                        rowClass = 'highlight-green';
+                    } else if (resultado === 1) {
+                        rowClass = 'highlight-yellow';
+                    } else {
+                        rowClass = 'highlight-red';
+                    }
+                    
+                    // Aplicar la nueva clase a la celda
+                    cell.classList.add(rowClass);
+                });
+            };
+        });
+
+
         // Function to send actions to the MMU server
         /*function sendMMUAction(action, pid = null, ptr = null, size = null) {
             fetch('/simulate_stream', {
@@ -171,10 +282,20 @@
             // Clear the previous table data
             optTableBody.innerHTML = '';
             algTableBody.innerHTML = '';
+            
 
+            
             // Fill the OPT table with new data
             data.opt.forEach(page => {
-                const row = `<tr>
+                let rowClass = '';
+                if (page.loaded){
+                    rowClass = 'highlight-green';
+                }else if(page.mark === 1){
+                    rowClass = 'highlight-yellow';
+                }else{
+                    rowClass = 'highlight-red';
+                }
+                const row = `<tr">
                                 <td>${page.page_id}</td>
                                 <td>${page.pid}</td>
                                 <td>${page.loaded}</td>
@@ -188,8 +309,18 @@
             });
 
             // Fill the ALG table with new data
+           
             data.alg.forEach(page => {
-                const row = `<tr>
+                let rowclass = '';
+                resultado = page.pid % 3
+                if (resultado == 0){
+                    rowclass = 'highlight-green';
+                }else if(resultado == 1){
+                    rowclass = 'highlight-yellow';
+                }else{
+                    rowclass = 'highlight-red';
+                }
+                const row = `<tr class="${rowclass}">
                                 <td>${page.page_id}</td>
                                 <td>${page.pid}</td>
                                 <td>${page.loaded}</td>
@@ -200,6 +331,7 @@
                                 <td>${page.mark}</td>
                             </tr>`;
                 algTableBody.innerHTML += row;
+                
             });
 
             // Update the summary tables

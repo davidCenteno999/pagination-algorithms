@@ -41,7 +41,7 @@ def initialize_MMU(algorithm):
         algo = 2
     else:
         algo = 3
-    # Aquí inicializamos la MMU con el algoritmo seleccionado
+    # Aquí la MMU con el algoritmo seleccionado
     MMU1 = MMU(400, 4, algo)
     MMU2 = MMU(400, 4, 4)
 
@@ -139,7 +139,7 @@ def generate_operations(processes, max_operations, seed, filename='operations_ge
             operations_last_new_process +=1
             last_operation ='kill'
 
-    print(list(ptr_table.keys()))
+    """print(list(ptr_table.keys()))
     print(operations_list)
     print(len(ptr_table))
     print("Operations")
@@ -149,7 +149,7 @@ def generate_operations(processes, max_operations, seed, filename='operations_ge
     print(operations_last_new_process)
     print(operations_per_process)
     print(total_pages)
-    print(used_pages)
+    print(used_pages)"""
     with open(filename, 'w') as file:
         for operation in operations_list:
             file.write(f"{operation}\n")
@@ -180,7 +180,7 @@ def simulate():
     errors = []
     algorithm = request.form['algorithm']
 
-    # Inicializamos la MMU con el algoritmo seleccionado
+
     initialize_MMU(algorithm)
 
     if input_method == 'manual':
@@ -210,9 +210,11 @@ def simulate():
 
     return render_template('result.html', operations=operations_list)
 
-@app.route('/simulate_stream')  # Cambiar a POST
+@app.route('/simulate_stream')  
 def simulate_stream():
     operations_list = app.config.get('OPERATIONS_LIST', [])
+
+    #print(operations_list)
 
     
 
@@ -222,7 +224,7 @@ def simulate_stream():
         for operation in operations_list:
             global paused
             while paused:
-                time.sleep(0.1)  # Esperar a que se reanude
+                time.sleep(0.1)  
             match = re.match(pattern, operation)
             
             if match:
@@ -232,21 +234,18 @@ def simulate_stream():
 
                 #print(f'Operation: {operation_type}, First Arg: {first_arg}, Second Arg: {second_arg}')
 
-                # Ejecutar la operación según el tipo
+
                 if operation_type == "new":
-                    # Ejecutar la operación new en la MMU con pid y tamaño
+                    
                     MMU1.new(first_arg, second_arg)  # first_arg = pid, second_arg = size
                     MMU2.new(first_arg, second_arg)
                 elif operation_type == "use":
-                    # Ejecutar la operación use en la MMU con el puntero
                     MMU1.use(first_arg)  # first_arg = puntero (ptr)
                     MMU2.use(first_arg)
                 elif operation_type == "delete":
-                    # Ejecutar la operación delete en la MMU con el puntero
                     MMU1.delete(first_arg)  # first_arg = puntero (ptr)
                     MMU2.delete(first_arg)
                 elif operation_type == "kill":
-                    # Ejecutar la operación kill en la MMU con pid
                     MMU1.kill(first_arg)  # first_arg = pid
                     MMU2.kill(first_arg)
 
@@ -255,11 +254,10 @@ def simulate_stream():
                 mmu_state = {
                     'opt': MMU1.get_pages_state(),  # Obtener el estado del algoritmo OPT
                     'alg': MMU2.get_pages_state(),  # Obtener el estado de otro algoritmo
-                    'summary_1': MMU1.get_summary_1(),  # Resumen 1
-                    'summary_2': MMU2.get_summary_1(),   # Resumen 2
+                    'summary_1': MMU1.get_summary_1(),  
+                    'summary_2': MMU2.get_summary_1(),   
                     'current_operation': f"{line_number}: {operation}"
                 }
-                # Enviar los datos en formato SSE (Server-Sent Events) al cliente
                 #print(mmu_state)
                   # Simular el tiempo entre cada operación
                 line_number += 1
