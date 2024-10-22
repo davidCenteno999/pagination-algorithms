@@ -5,6 +5,7 @@ import re
 import time  # Para simular el progreso de las operaciones
 from componentes import MMU, Pagina
 import json
+import traceback
 
 app = Flask(__name__)
 
@@ -222,49 +223,56 @@ def simulate_stream():
         pattern = r'(\w+)\(([^,]*),?([^)]*)\)'  # Captura un primer argumento y un segundo opcional
         line_number = 1
         for operation in operations_list:
-            global paused
-            while paused:
-                None
-            match = re.match(pattern, operation)
-            
-            if match:
-                operation_type = match.group(1)
-                first_arg = int(match.group(2))  # Primer argumento
-                second_arg = int(match.group(3)) if match.group(3) else None  # Segundo argumento opcional
+            try:
+                #global paused
+                #while paused:
+                #    None
+                match = re.match(pattern, operation)
+                
+                if match:
+                    operation_type = match.group(1)
+                    first_arg = int(match.group(2))  # Primer argumento
+                    second_arg = int(match.group(3)) if match.group(3) else None  # Segundo argumento opcional
 
-                #print(f'Operation: {operation_type}, First Arg: {first_arg}, Second Arg: {second_arg}')
-
-
-                if operation_type == "new":
-                    
-                    MMU1.new(first_arg, second_arg)  # first_arg = pid, second_arg = size
-                    MMU2.new(first_arg, second_arg)
-                elif operation_type == "use":
-                    MMU1.use(first_arg)  # first_arg = puntero (ptr)
-                    MMU2.use(first_arg)
-                elif operation_type == "delete":
-                    MMU1.delete(first_arg)  # first_arg = puntero (ptr)
-                    MMU2.delete(first_arg)
-                elif operation_type == "kill":
-                    MMU1.kill(first_arg)  # first_arg = pid
-                    MMU2.kill(first_arg)
+                    #print(f'Operation: {operation_type}, First Arg: {first_arg}, Second Arg: {second_arg}')
 
 
-                MMU1.imprimir_atributos()
-                mmu_state = {
-                    'opt': MMU2.get_pages_state(),  # Obtener el estado del algoritmo OPT
-                    'alg': MMU1.get_pages_state(),  # Obtener el estado de otro algoritmo
-                    'summary_1': MMU1.get_summary_1(),  
-                    'summary_2': MMU1.get_summary_2(),   
-                    'summary_3': MMU2.get_summary_1(),  
-                    'summary_4': MMU2.get_summary_2(),   
-                    'current_operation': f"{line_number}: {operation}"
-                }
-                #print(mmu_state)
-                  # Simular el tiempo entre cada operación
-                line_number += 1
-                paused = True
-                yield f"data:{json.dumps(mmu_state)}\n\n"
+                    if operation_type == "new":
+                        
+                        MMU1.new(first_arg, second_arg)  # first_arg = pid, second_arg = size
+                        MMU2.new(first_arg, second_arg)
+                    elif operation_type == "use":
+                        MMU1.use(first_arg)  # first_arg = puntero (ptr)
+                        MMU2.use(first_arg)
+                    elif operation_type == "delete":
+                        MMU1.delete(first_arg)  # first_arg = puntero (ptr)
+                        MMU2.delete(first_arg)
+                    elif operation_type == "kill":
+                        MMU1.kill(first_arg)  # first_arg = pid
+                        MMU2.kill(first_arg)
+
+
+                    MMU1.imprimir_atributos()
+                    mmu_state = {
+                        'opt': MMU2.get_pages_state(),  # Obtener el estado del algoritmo OPT
+                        'alg': MMU1.get_pages_state(),  # Obtener el estado de otro algoritmo
+                        'summary_1': MMU1.get_summary_1(),  
+                        'summary_2': MMU1.get_summary_2(),   
+                        'summary_3': MMU2.get_summary_1(),  
+                        'summary_4': MMU2.get_summary_2(),   
+                        'current_operation': f"{line_number}: {operation}"
+                    }
+                    #print(mmu_state)
+                    # Simular el tiempo entre cada operación
+                    line_number += 1
+                    time.sleep(0.1)
+                    paused = True
+                    yield f"data:{json.dumps(mmu_state)}\n\n"
+            except TypeError as e:
+                print("A TypeError occurred:")
+                print(f"Error message: {e}")
+                traceback.print_exc()
+
         
 
     return Response(generate(), mimetype='text/event-stream')
