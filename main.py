@@ -256,6 +256,8 @@ def simulate_stream():
                     'alg': MMU1.get_pages_state(),  # Obtener el estado de otro algoritmo
                     'summary_1': MMU1.get_summary_1(),  
                     'summary_2': MMU1.get_summary_2(),   
+                    'summary_3': MMU2.get_summary_1(),  
+                    'summary_4': MMU2.get_summary_2(),   
                     'current_operation': f"{line_number}: {operation}"
                 }
                 #print(mmu_state)

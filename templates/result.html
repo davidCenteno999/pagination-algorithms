@@ -29,11 +29,24 @@
         .lightyellow { background-color: lightyellow; }
         .peachpuff { background-color: peachpuff; }
 
-        .summary-table {
-            width: 30%;
-            float: left;
-            margin: 20px 10px;
+        .summary-container {
+            width: 85%;
+            overflow: hidden;
         }
+
+        .summary-table {
+            width: 40%;
+            float: center;
+            margin: 20px 10px;
+            border-collapse: collapse;
+        }
+
+        .summary-table td, .summary-table th {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
 
         .highlight-red {
             background-color: lightcoral;
@@ -175,14 +188,28 @@
         </tbody>
     </table>
 
-    <!-- Summary Tables -->
-    <table class="summary-table" id="summary-1">
-        <!-- Summary data for OPT algorithm will be dynamically inserted here -->
-    </table>
+        <!-- Contenedor para el par de tablas 1 y 2 -->
+    <div class="summary-container">
+        <table class="summary-table" id="summary-1">
+            <!-- Summary data for OPT algorithm will be dynamically inserted here -->
+        </table>
 
-    <table class="summary-table" id="summary-2">
-        <!-- Summary data for ALG algorithm will be dynamically inserted here -->
-    </table>
+        <table class="summary-table" id="summary-2">
+            <!-- Summary data for ALG algorithm will be dynamically inserted here -->
+        </table>
+    </div>
+
+    <!-- Contenedor para el par de tablas 3 y 4 -->
+    <div class="summary-container">
+        <table class="summary-table" id="summary-3">
+            <!-- Summary data for OPT algorithm will be dynamically inserted here -->
+        </table>
+
+        <table class="summary-table" id="summary-4">
+            <!-- Summary data for ALG algorithm will be dynamically inserted here -->
+        </table>
+    </div>
+
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -357,6 +384,25 @@
                 
                 <tr><td>Loaded Pages</td><td>${data.summary_1.loaded_pages}</td></tr>
             `;
+
+            document.getElementById('summary-3').innerHTML = `
+                <tr><td>Total Pages</td><td>${data.summary_3.total_pages}</td></tr>
+                <tr><td>Free Frames</td><td>${data.summary_3.free_frames}</td></tr>
+                <tr><td>Loaded Pages</td><td>${data.summary_3.loaded_pages}</td></tr>
+                <tr><td>Processes</td><td>${data.summary_3.processes}</td></tr>
+                <tr><td>Sim-Time</td><td>${data.summary_3.simTime}s</td></tr>
+                <tr><td>Thrashing</td><td>${data.summary_3.thrashing}s</td></tr>
+                <tr><td>RAM KB</td><td>${data.summary_3.usedRam}</td></tr>
+                <tr><td>RAM %</td><td>${data.summary_3.usedRamPer}</td></tr>
+                <tr><td>VRAM KB</td><td>${data.summary_3.usedVRam}</td></tr>
+            `;
+            document.getElementById('summary-4').innerHTML = `
+                <tr><td>Used Frames</td><td>${data.summary_4.used_frames}</td></tr>
+                <tr><td>Algorithm</td><td>${'OPT'}</td></tr>
+                <tr><td>Loaded Pages</td><td>${data.summary_4.loaded_pages}</td></tr>
+            `;
+
+
             currentOperationSpan.innerText = data.current_operation;
         }
     </script>
