@@ -43,7 +43,7 @@ def initialize_MMU(algorithm):
         algo = 3
     # Aquí la MMU con el algoritmo seleccionado
     MMU1 = MMU(400, 4, algo)
-    MMU2 = MMU(400, 4, 4)
+    MMU2 = MMU(400, 4, algo)
 
 def generate_operations(processes, max_operations, seed, filename='operations_generate.txt'):
     random.seed(seed)  # Establecer la semilla para la aleatoriedad
@@ -224,7 +224,7 @@ def simulate_stream():
         for operation in operations_list:
             global paused
             while paused:
-                time.sleep(0.1)  
+                None
             match = re.match(pattern, operation)
             
             if match:

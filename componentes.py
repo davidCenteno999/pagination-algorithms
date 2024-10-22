@@ -87,7 +87,8 @@ class MMU:
                     self.thrashing_time+=5
 
                 self.used_pages.append(pagina)
-                self.future_pages.pop(0)
+                if(len(self.future_pages)>0):
+                    self.future_pages.pop(0)
                 self.simTime+=1
         else:
             print("Punetero no encontrado.")
@@ -108,8 +109,8 @@ class MMU:
                     self.total_paginas-=1
                     self.used_VRAM-=4
 
-        pid = self.punteros[ptr] # Encontrar el proceso asociado al ptr
-        self.procesos[pid].remove(ptr) #Eliminar ptr del proceso
+            pid = self.punteros[ptr] # Encontrar el proceso asociado al ptr
+            self.procesos[pid].remove(ptr) #Eliminar ptr del proceso
     
     def kill (self, pid): 
         for ptr in self.procesos[pid]:
