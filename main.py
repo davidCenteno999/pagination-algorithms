@@ -252,10 +252,10 @@ def simulate_stream():
 
                 MMU1.imprimir_atributos()
                 mmu_state = {
-                    'opt': MMU1.get_pages_state(),  # Obtener el estado del algoritmo OPT
-                    'alg': MMU2.get_pages_state(),  # Obtener el estado de otro algoritmo
+                    'opt': MMU2.get_pages_state(),  # Obtener el estado del algoritmo OPT
+                    'alg': MMU1.get_pages_state(),  # Obtener el estado de otro algoritmo
                     'summary_1': MMU1.get_summary_1(),  
-                    'summary_2': MMU2.get_summary_1(),   
+                    'summary_2': MMU1.get_summary_2(),   
                     'current_operation': f"{line_number}: {operation}"
                 }
                 #print(mmu_state)

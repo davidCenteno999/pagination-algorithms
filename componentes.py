@@ -330,7 +330,7 @@ class MMU:
     def get_summary_2(self):
         # Otro resumen personalizado
         return {
-            'used_frames': len(self.memoria_real),
+            'used_frames': self.paginas_ocupadas_memoria_real(),
             'algorithm': self.tipoAlgoritmo
         }
 

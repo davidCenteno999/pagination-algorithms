@@ -287,15 +287,16 @@
             
             // Fill the OPT table with new data
             data.opt.forEach(page => {
-                let rowClass = '';
-                if (page.loaded){
-                    rowClass = 'highlight-green';
-                }else if(page.mark === 1){
-                    rowClass = 'highlight-yellow';
+                let rowclass = '';
+                resultado = page.pid % 3
+                if (resultado == 0){
+                    rowclass = 'highlight-green';
+                }else if(resultado == 1){
+                    rowclass = 'highlight-yellow';
                 }else{
-                    rowClass = 'highlight-red';
+                    rowclass = 'highlight-red';
                 }
-                const row = `<tr">
+                const row = `<tr class="${rowclass}">
                                 <td>${page.page_id}</td>
                                 <td>${page.pid}</td>
                                 <td>${page.loaded}</td>
@@ -348,7 +349,12 @@
             `;
             document.getElementById('summary-2').innerHTML = `
                 <tr><td>Used Frames</td><td>${data.summary_2.used_frames}</td></tr>
-                <tr><td>Algorithm</td><td>${data.summary_2.algorithm}</td></tr>
+                <tr><td>Algorithm</td><td>${
+                data.summary_2.algorithm === 0 ? 'FIFO' :
+                data.summary_2.algorithm === 1 ? 'SC' :
+                data.summary_2.algorithm === 2 ? 'MRU' : 'RND'
+                }</td></tr>
+                
                 <tr><td>Loaded Pages</td><td>${data.summary_1.loaded_pages}</td></tr>
             `;
             currentOperationSpan.innerText = data.current_operation;
