@@ -29,11 +29,6 @@
         .lightyellow { background-color: lightyellow; }
         .peachpuff { background-color: peachpuff; }
 
-<<<<<<< Updated upstream
-        .summary-container {
-            width: 85%;
-            overflow: hidden;
-=======
         .summary-table {
             width: 30%;
             float: left;
@@ -57,7 +52,6 @@
             border: 1px solid black;
             padding: 8px;
             text-align: center;
->>>>>>> Stashed changes
         }
 
         .summary-table {
@@ -116,12 +110,7 @@
 
         tbody {
             display: block;
-<<<<<<< Updated upstream
-            height: 200px; /* Altura ajustada para ver 20 filas */
-            overflow-y: scroll; /* Desplazamiento vertical */
-=======
             height: 350px; /* Altura ajustada para ver 20 filas */
->>>>>>> Stashed changes
         }
 
         th, td {
@@ -133,40 +122,6 @@
         th {
             background-color: #f2f2f2;
         }
-<<<<<<< Updated upstream
-        .top-table-custom {
-            width: 100%;
-            margin: 20px 0;
-            text-align: center;
-            border: 2px solid #000; /* Borde más grueso y verde */
-            table-layout: fixed; /* Asegura el ancho fijo de las celdas */
-            overflow: hidden;
-        }
-
-        .top-table-custom td {
-            border: 2px solid #000;
-            padding: 8px;
-            font-weight: bold;
-            
-            width: 1%; /* Celdas estrechas */
-        }
-        .top-table-custom2 {
-            width: 100%;
-            margin: 20px 0;
-            text-align: center;
-            border: 2px solid #000; /* Borde más grueso y verde */
-            table-layout: fixed; /* Asegura el ancho fijo de las celdas */
-            overflow: hidden;
-        }
-
-        .top-table-custom2 td {
-            border: 2px solid #000;
-            padding: 8px;
-            font-weight: bold;
-            
-            width: 1%; /* Celdas estrechas */
-        }
-=======
         .algorithm {
             overflow-y: scroll;
         }
@@ -186,37 +141,12 @@
             text-align: center;
         }
 
->>>>>>> Stashed changes
 
     </style>
 </head>
 <body>
     <h2>MMU Visualization</h2>
 
-<<<<<<< Updated upstream
-
-    <table class="top-table-custom">
-        <tr id="top-row">
-
-        </tr>
-    </table>
-
-    <table class="top-table-custom2">
-        <tr id="top-row2">
-
-        </tr>
-    </table>
-
-    <button id="continue-btn">Continue</button>
-    <h3>Current Operation: <span id="current-operation"></span></h3>
-
-
-    <div class="memory-bars bar-opt">
-        <!-- The bars for OPT algorithm will be updated dynamically here -->
-    </div>
-    <div class="memory-bars bar-alg">
-        <!-- The bars for ALG algorithm will be updated dynamically here -->
-=======
     
 
     
@@ -229,7 +159,6 @@
         <table class="top-table-custom" id="top-row2">
             <!-- Contenido de la segunda tabla -->
         </table>
->>>>>>> Stashed changes
     </div>
 
 
@@ -271,100 +200,6 @@
         </tbody>
     </table>
 
-<<<<<<< Updated upstream
-    <!-- Contenedor para el par de tablas 3 y 4 -->
-    <div class="summary-container">
-        <table class="summary-table" id="summary-2">
-            <!-- Summary data for ALG algorithm will be dynamically inserted here -->
-        </table>
-
-        <table class="summary-table2" id="summary-4">
-            <!-- Summary data for ALG algorithm will be dynamically inserted here -->
-        </table>
-    </div>
-
-
-        <!-- Contenedor para el par de tablas 1 y 2 -->
-    <div class="summary-container">
-        <table class="summary-table2" id="summary-1">
-            <!-- Summary data for OPT algorithm will be dynamically inserted here -->
-        </table>
-
-        <table class="summary-table" id="summary-3">
-            <!-- Summary data for OPT algorithm will be dynamically inserted here -->
-        </table>
-    </div>
-
-    
-
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const topRow = document.getElementById('top-row');
-            const topRow2 = document.getElementById('top-row2');
-            
-            for (let i = 0; i < 100; i++) {
-                const cell = document.createElement('td');
-                topRow.appendChild(cell);
-            }
-            for (let i = 0; i < 100; i++) {
-                const cell = document.createElement('td');
-                topRow2.appendChild(cell);
-            }
-            
-
-            // Inicializa la conexión con el servidor para los datos de la MMU
-            const eventSource = new EventSource("/simulate_stream");
-            
-            eventSource.onmessage = function(event) {
-                const data = JSON.parse(event.data);  // Convertir los datos JSON enviados por el servidor
-                
-                // Actualizar las celdas según los datos de `data.opt`
-                data.opt.forEach((page, index) => {
-                    const cell = topRow.children[index];  // Obtener la celda correspondiente
-                    
-                    // Limpiar cualquier clase previa
-                    cell.classList.remove('highlight-green', 'highlight-yellow', 'highlight-red');
-                    
-                    // Definir la clase según el valor de `page.pid % 3`
-                    let rowClass = '';
-                    const resultado = page.pid % 3;
-                    if (resultado === 0) {
-                        rowClass = 'highlight-green';
-                    } else if (resultado === 1) {
-                        rowClass = 'highlight-yellow';
-                    } else {
-                        rowClass = 'highlight-red';
-                    }
-                    
-                    // Aplicar la nueva clase a la celda
-                    cell.classList.add(rowClass);
-                });
-                data.alg.forEach((page, index) => {
-                    const cell = topRow2.children[index];  // Obtener la celda correspondiente
-                    
-                    // Limpiar cualquier clase previa
-                    cell.classList.remove('highlight-green', 'highlight-yellow', 'highlight-red');
-                    
-                    // Definir la clase según el valor de `page.pid % 3`
-                    let rowClass = '';
-                    const resultado = page.pid % 3;
-                    if (resultado === 0) {
-                        rowClass = 'highlight-green';
-                    } else if (resultado === 1) {
-                        rowClass = 'highlight-yellow';
-                    } else {
-                        rowClass = 'highlight-red';
-                    }
-                    
-                    // Aplicar la nueva clase a la celda
-                    cell.classList.add(rowClass);
-                });
-            };
-        });
-
-
-=======
     <!-- Summary Tables -->
     <table class="summary-table" id="summary-1">
        
@@ -381,7 +216,6 @@
             const b = ((pid * 789) % 240)+15;
             return `rgb(${r}, ${g}, ${b})`;
         }
->>>>>>> Stashed changes
         // Function to send actions to the MMU server
         /*function sendMMUAction(action, pid = null, ptr = null, size = null) {
             fetch('/simulate_stream', {
@@ -430,23 +264,6 @@
 
             optTableBody.innerHTML = '';
             algTableBody.innerHTML = '';
-<<<<<<< Updated upstream
-            
-
-            
-            // Fill the OPT table with new data
-            data.opt.forEach(page => {
-                let rowclass = '';
-                resultado = page.pid % 3
-                if (resultado == 0){
-                    rowclass = 'highlight-green';
-                }else if(resultado == 1){
-                    rowclass = 'highlight-yellow';
-                }else{
-                    rowclass = 'highlight-red';
-                }
-                const row = `<tr class="${rowclass}">
-=======
             data.opt.forEach((page, index) => {
                 const cell = topRow.children[index];  // Obtener la celda correspondiente
                 
@@ -458,7 +275,6 @@
                 const rowColor = generateColorForPid(page.pid);
     
                 const row = `<tr style="background-color: ${rowColor};">
->>>>>>> Stashed changes
                                 <td>${page.page_id}</td>
                                 <td>${page.pid}</td>
                                 <td>${page.loaded}</td>
@@ -471,21 +287,6 @@
                 optTableBody.innerHTML += row;
             });
 
-<<<<<<< Updated upstream
-            // Fill the ALG table with new data
-           
-            data.alg.forEach(page => {
-                let rowclass = '';
-                resultado = page.pid % 3
-                if (resultado == 0){
-                    rowclass = 'highlight-green';
-                }else if(resultado == 1){
-                    rowclass = 'highlight-yellow';
-                }else{
-                    rowclass = 'highlight-red';
-                }
-                const row = `<tr class="${rowclass}">
-=======
            
             data.alg.forEach((page, index) => {
                 const cell = topRow2.children[index];  // Obtener la celda correspondiente
@@ -496,7 +297,6 @@
             
                 const rowColor = generateColorForPid(page.pid);
                 const row = `<tr style="background-color: ${rowColor};">
->>>>>>> Stashed changes
                                 <td>${page.page_id}</td>
                                 <td>${page.pid}</td>
                                 <td>${page.loaded}</td>
@@ -534,42 +334,6 @@
             `;
 
             document.getElementById('summary-2').innerHTML = `
-<<<<<<< Updated upstream
-                <tr><td>Used Frames</td><td>${data.summary_2.used_frames}</td></tr>
-                <tr><td>Algorithm</td><td>${
-                data.summary_2.algorithm === 0 ? 'FIFO' :
-                data.summary_2.algorithm === 1 ? 'SC' :
-                data.summary_2.algorithm === 2 ? 'MRU' : 'RND'
-                }</td></tr>
-                
-                <tr><td>Loaded Pages</td><td>${data.summary_1.loaded_pages}</td></tr>
-            `;
-
-            document.getElementById('summary-3').innerHTML = `
-                <tr><td>Total Pages</td><td>${data.summary_3.total_pages}</td></tr>
-                <tr><td>Free Frames</td><td>${data.summary_3.free_frames}</td></tr>
-                <tr><td>Loaded Pages</td><td>${data.summary_3.loaded_pages}</td></tr>
-                <tr><td>Processes</td><td>${data.summary_3.processes}</td></tr>
-                <tr><td>Sim-Time</td><td>${data.summary_3.simTime}s</td></tr>
-                <tr><td>Thrashing</td><td>${data.summary_3.thrashing}s</td></tr>
-                <tr><td>RAM KB</td><td>${data.summary_3.usedRam}</td></tr>
-                <tr><td>RAM %</td><td>${data.summary_3.usedRamPer}</td></tr>
-                <tr><td>VRAM KB</td><td>${data.summary_3.usedVRam}</td></tr>
-            `;
-            document.getElementById('summary-4').innerHTML = `
-                <tr><td>Used Frames</td><td>${data.summary_2.used_frames}</td></tr>
-                <tr><td>Algorithm</td><td>${
-                data.summary_4.algorithm === 0 ? 'FIFO' :
-                data.summary_4.algorithm === 1 ? 'SC' :
-                data.summary_4.algorithm === 2 ? 'MRU' : 'RND'
-                }</td></tr>
-                
-                <tr><td>Loaded Pages</td><td>${data.summary_4.loaded_pages}</td></tr>
-            `;
-            
-
-
-=======
                 <tr><td>${data.summary_2.algorithm}</td></tr>
                 <tr><td>Processes</td><td>Sim-Time</td></tr>
                 <tr><td>${data.summary_2.processes}</td><td>${data.summary_2.simTime}s</td></tr>
@@ -588,7 +352,6 @@
                 <tr><td>${data.summary_2.fragmentacion}</td></tr>
             `;
 
->>>>>>> Stashed changes
             currentOperationSpan.innerText = data.current_operation;
         }
     </script>

@@ -93,15 +93,9 @@ class MMU:
                 else:
                     self.simTime+=1
                 self.used_pages.append(pagina)
-<<<<<<< Updated upstream
-                if(len(self.future_pages)>0):
-                    self.future_pages.pop(0)
-                self.simTime+=1
-=======
                 self.future_pages_aux.append(pagina.id)
                 
                 
->>>>>>> Stashed changes
         else:
             return
 
@@ -124,12 +118,8 @@ class MMU:
                         self.total_paginas-=1
                         self.used_VRAM-=4
 
-<<<<<<< Updated upstream
-            pid = self.punteros[ptr] # Encontrar el proceso asociado al ptr
-=======
         pid = self.punteros[ptr] # Encontrar el proceso asociado al ptr
         if pid in self.procesos:
->>>>>>> Stashed changes
             self.procesos[pid].remove(ptr) #Eliminar ptr del proceso
     
     def kill (self, pid): 
@@ -383,12 +373,7 @@ class MMU:
     def get_summary_2(self):
         # Otro resumen personalizado
         return {
-<<<<<<< Updated upstream
-            'used_frames': self.paginas_ocupadas_memoria_real(),
-            'algorithm': self.tipoAlgoritmo
-=======
             
->>>>>>> Stashed changes
         }
 
 class Pagina:
