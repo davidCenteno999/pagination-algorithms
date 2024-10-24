@@ -29,9 +29,35 @@
         .lightyellow { background-color: lightyellow; }
         .peachpuff { background-color: peachpuff; }
 
+<<<<<<< Updated upstream
         .summary-container {
             width: 85%;
             overflow: hidden;
+=======
+        .summary-table {
+            width: 30%;
+            float: left;
+            margin: 20px 10px;
+            float: left;
+        }
+        .summary-table td, .summary-table th {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+        .summary-table2 {
+            width: 40%;
+            float: center;
+            margin: 20px 10px;
+            border-collapse: collapse;
+            float: right;
+        }
+
+        .summary-table2 td, .summary-table2 th {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+>>>>>>> Stashed changes
         }
 
         .summary-table {
@@ -90,8 +116,12 @@
 
         tbody {
             display: block;
+<<<<<<< Updated upstream
             height: 200px; /* Altura ajustada para ver 20 filas */
             overflow-y: scroll; /* Desplazamiento vertical */
+=======
+            height: 350px; /* Altura ajustada para ver 20 filas */
+>>>>>>> Stashed changes
         }
 
         th, td {
@@ -103,6 +133,7 @@
         th {
             background-color: #f2f2f2;
         }
+<<<<<<< Updated upstream
         .top-table-custom {
             width: 100%;
             margin: 20px 0;
@@ -135,12 +166,34 @@
             
             width: 1%; /* Celdas estrechas */
         }
+=======
+        .algorithm {
+            overflow-y: scroll;
+        }
+
+        .table-container {
+            display: flex;
+            flex-direction: column; /* Acomoda los elementos en columna (verticalmente) */
+            align-items: center; /* Alinea las tablas en el centro horizontalmente */
+        }
+
+        .top-table-custom {
+            width: 40%;
+        }
+        .top-table-custom td, .top-table-custom th {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
+>>>>>>> Stashed changes
 
     </style>
 </head>
 <body>
     <h2>MMU Visualization</h2>
 
+<<<<<<< Updated upstream
 
     <table class="top-table-custom">
         <tr id="top-row">
@@ -163,10 +216,25 @@
     </div>
     <div class="memory-bars bar-alg">
         <!-- The bars for ALG algorithm will be updated dynamically here -->
+=======
+    
+
+    
+    <h3>Current Operation: <span id="current-operation"></span></h3>
+
+    <div class="table-container">
+        <table class="top-table-custom" id="top-row">
+            <!-- Contenido de la primera tabla -->
+        </table>
+        <table class="top-table-custom" id="top-row2">
+            <!-- Contenido de la segunda tabla -->
+        </table>
+>>>>>>> Stashed changes
     </div>
 
+
     <!-- Tables for MMU-OPT and MMU-[ALG] -->
-    <table id="opt-table">
+    <table class="algorithm" id="opt-table">
         <thead>
             <tr>
                 <th>PAGE ID</th>
@@ -184,7 +252,8 @@
         </tbody>
     </table>
 
-    <table id="alg-table">
+
+    <table class="algorithm" id="alg-table">
         <thead>
             <tr>
                 <th>PAGE ID</th>
@@ -198,10 +267,11 @@
             </tr>
         </thead>
         <tbody id="alg-body">
-            <!-- ALG algorithm data will be dynamically inserted here -->
+            
         </tbody>
     </table>
 
+<<<<<<< Updated upstream
     <!-- Contenedor para el par de tablas 3 y 4 -->
     <div class="summary-container">
         <table class="summary-table" id="summary-2">
@@ -294,6 +364,24 @@
         });
 
 
+=======
+    <!-- Summary Tables -->
+    <table class="summary-table" id="summary-1">
+       
+    </table>
+
+    <table class="summary-table2" id="summary-2">
+       
+    </table>
+
+    <script>
+        function generateColorForPid(pid) {
+            const r = ((pid * 123) % 240)+15;
+            const g = ((pid * 456) % 240)+15;
+            const b = ((pid * 789) % 240)+15;
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+>>>>>>> Stashed changes
         // Function to send actions to the MMU server
         /*function sendMMUAction(action, pid = null, ptr = null, size = null) {
             fetch('/simulate_stream', {
@@ -309,23 +397,40 @@
             });
         }*/
         document.addEventListener("DOMContentLoaded", function() {
+            const topRow = document.getElementById('top-row');
+            const topRow2 = document.getElementById('top-row2');
+            
+            for (let i = 0; i < 100; i++) {
+                const cell = document.createElement('td');
+                topRow.appendChild(cell);
+            }
+            for (let i = 0; i < 100; i++) {
+                const cell = document.createElement('td');
+                topRow2.appendChild(cell);
+            }
+
             const eventSource = new EventSource("/simulate_stream");
+            
 
             eventSource.onmessage = function(event) {
-                const data = JSON.parse(event.data);  // Convertir los datos JSON enviados por el servidor
-                updateTables(data);  // Actualizar las tablas y las barras de memoria
+                const data = JSON.parse(event.data);  
+                updateTables(data);  
+                
+
             };
         });
 
-        // Function to update the tables and summary data based on the MMU state
         function updateTables(data) {
             const optTableBody = document.getElementById('opt-body');
             const algTableBody = document.getElementById('alg-body');
             const currentOperationSpan = document.getElementById('current-operation');
+            const topRow = document.getElementById('top-row');
+            const topRow2 = document.getElementById('top-row2');
 
-            // Clear the previous table data
+
             optTableBody.innerHTML = '';
             algTableBody.innerHTML = '';
+<<<<<<< Updated upstream
             
 
             
@@ -341,6 +446,19 @@
                     rowclass = 'highlight-red';
                 }
                 const row = `<tr class="${rowclass}">
+=======
+            data.opt.forEach((page, index) => {
+                const cell = topRow.children[index];  // Obtener la celda correspondiente
+                
+                // Generar y aplicar el color basado en el PID
+                const color = generateColorForPid(page.pid);
+                cell.style.backgroundColor = color;
+            
+
+                const rowColor = generateColorForPid(page.pid);
+    
+                const row = `<tr style="background-color: ${rowColor};">
+>>>>>>> Stashed changes
                                 <td>${page.page_id}</td>
                                 <td>${page.pid}</td>
                                 <td>${page.loaded}</td>
@@ -353,6 +471,7 @@
                 optTableBody.innerHTML += row;
             });
 
+<<<<<<< Updated upstream
             // Fill the ALG table with new data
            
             data.alg.forEach(page => {
@@ -366,6 +485,18 @@
                     rowclass = 'highlight-red';
                 }
                 const row = `<tr class="${rowclass}">
+=======
+           
+            data.alg.forEach((page, index) => {
+                const cell = topRow2.children[index];  // Obtener la celda correspondiente
+                    
+                // Generar y aplicar el color basado en el PID
+                const color = generateColorForPid(page.pid);
+                cell.style.backgroundColor = color;
+            
+                const rowColor = generateColorForPid(page.pid);
+                const row = `<tr style="background-color: ${rowColor};">
+>>>>>>> Stashed changes
                                 <td>${page.page_id}</td>
                                 <td>${page.pid}</td>
                                 <td>${page.loaded}</td>
@@ -379,19 +510,31 @@
                 
             });
 
-            // Update the summary tables
+
+            const thrashingStyle = (data.summary_1.thrashingP > 50) ? 'style="background: red;"' : '';
+            const thrashingStyle2 = (data.summary_2.thrashingP > 50) ? 'style="background: red;"' : '';
+
             document.getElementById('summary-1').innerHTML = `
-                <tr><td>Total Pages</td><td>${data.summary_1.total_pages}</td></tr>
-                <tr><td>Free Frames</td><td>${data.summary_1.free_frames}</td></tr>
-                <tr><td>Loaded Pages</td><td>${data.summary_1.loaded_pages}</td></tr>
-                <tr><td>Processes</td><td>${data.summary_1.processes}</td></tr>
-                <tr><td>Sim-Time</td><td>${data.summary_1.simTime}s</td></tr>
-                <tr><td>Thrashing</td><td>${data.summary_1.thrashing}s</td></tr>
-                <tr><td>RAM KB</td><td>${data.summary_1.usedRam}</td></tr>
-                <tr><td>RAM %</td><td>${data.summary_1.usedRamPer}</td></tr>
-                <tr><td>VRAM KB</td><td>${data.summary_1.usedVRam}</td></tr>
+                <tr><td>${data.summary_1.algorithm}</td></tr>
+                <tr><td>Processes</td><td>Sim-Time</td></tr>
+                <tr><td>${data.summary_1.processes}</td><td>${data.summary_1.simTime}s</td></tr>
+
+                <tr><td>RAM KB</td><td>RAM %</td><td>VRAM KB</td><td>VRAM %</td></tr>
+                <tr><td>${data.summary_1.usedRam}</td><td>${data.summary_1.usedRamPer}s</td><td>${data.summary_1.usedVRam}</td><td>${0}</td></tr>
+
+                <tr><td>Pages</td></tr>
+                <tr><td>TOTAL</td><td>LOADED</td><td>UNLOADED</td></tr>
+                <tr><td>${data.summary_1.total_pages}</td><td>${data.summary_1.loaded_pages}</td><td>${data.summary_1.unloaded_pages}</td></tr>
+
+                <tr><td>Thrashing</td></tr>
+                <tr ${thrashingStyle}><td>${data.summary_1.thrashing}s</td><td>${data.summary_1.thrashingP}%</td></tr>
+
+                <tr><td>Fragmentacion kB</td></tr>
+                <tr><td>${data.summary_1.fragmentacion}</td></tr>
             `;
+
             document.getElementById('summary-2').innerHTML = `
+<<<<<<< Updated upstream
                 <tr><td>Used Frames</td><td>${data.summary_2.used_frames}</td></tr>
                 <tr><td>Algorithm</td><td>${
                 data.summary_2.algorithm === 0 ? 'FIFO' :
@@ -426,6 +569,26 @@
             
 
 
+=======
+                <tr><td>${data.summary_2.algorithm}</td></tr>
+                <tr><td>Processes</td><td>Sim-Time</td></tr>
+                <tr><td>${data.summary_2.processes}</td><td>${data.summary_2.simTime}s</td></tr>
+
+                <tr><td>RAM KB</td><td>RAM %</td><td>VRAM KB</td><td>VRAM %</td></tr>
+                <tr><td>${data.summary_2.usedRam}</td><td>${data.summary_2.usedRamPer}s</td><td>${data.summary_2.usedVRam}</td><td>${0}</td></tr>
+
+                <tr><td>Pages</td></tr>
+                <tr><td>TOTAL</td><td>LOADED</td><td>UNLOADED</td></tr>
+                <tr><td>${data.summary_2.total_pages}</td><td>${data.summary_2.loaded_pages}</td><td>${data.summary_2.unloaded_pages}</td></tr>
+
+                <tr><td>Thrashing</td></tr>
+                <tr ${thrashingStyle2}><td>${data.summary_2.thrashing}s</td><td>${data.summary_2.thrashingP}%</td></tr>
+
+                <tr><td>Fragmentacion kB</td></tr>
+                <tr><td>${data.summary_2.fragmentacion}</td></tr>
+            `;
+
+>>>>>>> Stashed changes
             currentOperationSpan.innerText = data.current_operation;
         }
     </script>

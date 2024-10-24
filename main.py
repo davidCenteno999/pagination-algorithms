@@ -12,6 +12,7 @@ app = Flask(__name__)
 # Inicialmente declaramos la variable global sin valor
 MMU1 = None
 MMU2 = None
+MMU3 = None
 
 # Configurar una carpeta para almacenar archivos subidos
 UPLOAD_FOLDER = 'uploads'
@@ -33,6 +34,7 @@ def continue_simulation():
 def initialize_MMU(algorithm):
     global MMU1
     global MMU2
+    global MMU3
     algo = 0
     if algorithm == "FIFO":
         algo = 0
@@ -44,9 +46,14 @@ def initialize_MMU(algorithm):
         algo = 3
     # Aquí la MMU con el algoritmo seleccionado
     MMU1 = MMU(400, 4, algo)
+<<<<<<< Updated upstream
     MMU2 = MMU(400, 4, algo)
+=======
+    MMU2 = MMU(400, 4, 4)
+    MMU3 = MMU(400, 4, 0)
+>>>>>>> Stashed changes
 
-def generate_operations(processes, max_operations, seed, filename='operations_generate.txt'):
+def generate_operations(processes, max_operations, seed):
     random.seed(seed)  # Establecer la semilla para la aleatoriedad
     operations_list = []
     total_operations = 0
@@ -54,7 +61,8 @@ def generate_operations(processes, max_operations, seed, filename='operations_ge
     total_ptr = 1
     total_pages = 1
     operations_per_process = (max_operations // processes) - 1
-    ptr_table = {}  # Tabla de símbolos para almacenar punteros y su estado
+    ptr_table = {}  # Tabla de símbolos para almacenar punteros y su estado {ptr:[1,2,3,4,5,6],ptr:[]}
+    ptr_table_2 = {}
     created_processes = {}  # Conjunto para rastrear procesos creados
     used_pages = []
 
@@ -81,6 +89,7 @@ def generate_operations(processes, max_operations, seed, filename='operations_ge
             ptr = total_ptr
             total_ptr +=1
             ptr_table[ptr] = list(range(total_pages, total_pages + numero_paginas))
+            ptr_table_2[ptr] = list(range(total_pages, total_pages + numero_paginas))
             total_pages += numero_paginas
 
             if(operations_last_new_process >= operations_per_process): #new process forced
@@ -111,9 +120,7 @@ def generate_operations(processes, max_operations, seed, filename='operations_ge
         elif operation_type == 'use' and len(ptr_table)!=0:
             ptr_to_use = random.choice(list(ptr_table.keys()))
             operations_list.append(f"use({ptr_to_use})")
-            current_used_pages = ptr_table[ptr_to_use]
-            for page in current_used_pages:
-                used_pages.append(page)
+            used_pages += ptr_table[ptr_to_use]
             total_operations += 1
             operations_last_new_process +=1
             last_operation ='use'
@@ -140,6 +147,7 @@ def generate_operations(processes, max_operations, seed, filename='operations_ge
             operations_last_new_process +=1
             last_operation ='kill'
 
+<<<<<<< Updated upstream
     """print(list(ptr_table.keys()))
     print(operations_list)
     print(len(ptr_table))
@@ -152,8 +160,29 @@ def generate_operations(processes, max_operations, seed, filename='operations_ge
     print(total_pages)
     print(used_pages)"""
     with open(filename, 'w') as file:
+=======
+    #print(list(ptr_table.keys()))
+    #print(operations_list)
+    #print(len(ptr_table))
+    #print("Operations")
+    #print(total_operations)
+    #print("Processes")
+    #print(total_processes)
+    #print(operations_last_new_process)
+    #print(operations_per_process)
+    #print(total_pages)
+    #print(used_pages)
+    with open('operations_generate.txt', 'w') as file:
+>>>>>>> Stashed changes
         for operation in operations_list:
             file.write(f"{operation}\n")
+    with open("paginasfuturas.txt", 'w') as file:
+        for page in used_pages:
+            file.write(f"{page}\n")
+    with open("punteros.txt", 'w') as file:
+        file.write("Puntero\tPáginas\n") 
+        for ptr, pages in ptr_table_2.items():
+            file.write(f"{ptr}\t{', '.join(map(str, pages))}\n")  # Escribe cada puntero y sus páginas
 
     return operations_list, used_pages
 
@@ -172,10 +201,44 @@ def validate_operations(operations_list):
 
     return errors
 
+def populate_future_pages(operations_list):
+    pattern = r'(\w+)\(([^,]*),?([^)]*)\)'  # Captura un primer argumento y un segundo opcional
+    line_number = 1
+    for operation in operations_list:
+        #global paused
+        #while paused:
+        #    time.sleep(0.1)  # Esperar a que se reanude
+        match = re.match(pattern, operation)
+        
+        if match:
+            operation_type = match.group(1)
+            first_arg = int(match.group(2))  # Primer argumento
+            second_arg = int(match.group(3)) if match.group(3) else None  # Segundo argumento opcional
+
+            #print(f'Operation: {operation_type}, First Arg: {first_arg}, Second Arg: {second_arg}')
+
+            # Ejecutar la operación según el tipo
+            if operation_type == "new":
+                # Ejecutar la operación new en la MMU con pid y tamaño  
+                MMU3.new(first_arg, second_arg)  # first_arg = pid, second_arg = size
+            elif operation_type == "use":
+                # Ejecutar la operación use en la MMU con el puntero
+                MMU3.use(first_arg)  # first_arg = puntero (ptr)
+            elif operation_type == "delete":
+                # Ejecutar la operación delete en la MMU con el puntero
+                MMU3.delete(first_arg)  # first_arg = puntero (ptr)
+            elif operation_type == "kill":
+                # Ejecutar la operación kill en la MMU con pid
+                MMU3.kill(first_arg)
+
+    return MMU3.future_pages_aux
+
+
 @app.route('/simulate', methods=['POST'])
 def simulate():
     global MMU1
     global MMU2
+    global MMU3
     input_method = request.form['input-method']
     operations_list = []
     errors = []
@@ -205,20 +268,46 @@ def simulate():
 
             errors = validate_operations(operations_list)
 
+            future_pages = populate_future_pages(operations_list)
+
+            MMU1.set_future_pages(future_pages)
+            MMU2.set_future_pages(future_pages)
     validation_errors = validate_operations(operations_list)
     
     app.config['OPERATIONS_LIST'] = operations_list
 
-    return render_template('result.html', operations=operations_list)
+    return render_template('result.html', operations=[])
+
+count = 0
 
 @app.route('/simulate_stream')  
 def simulate_stream():
+    global count
     operations_list = app.config.get('OPERATIONS_LIST', [])
+<<<<<<< Updated upstream
 
     #print(operations_list)
 
+=======
+>>>>>>> Stashed changes
     
+    
+    if (count < 1):
+        def generate():
+            pattern = r'(\w+)\(([^,]*),?([^)]*)\)'  # Captura un primer argumento y un segundo opcional
+            line_number = 1
+            for operation in operations_list:
+                #global paused
+                #while paused:
+                #    time.sleep(0.1)  # Esperar a que se reanude
+                match = re.match(pattern, operation)
+                
+                if match:
+                    operation_type = match.group(1)
+                    first_arg = int(match.group(2))  # Primer argumento
+                    second_arg = int(match.group(3)) if match.group(3) else None  # Segundo argumento opcional
 
+<<<<<<< Updated upstream
     def generate():
         pattern = r'(\w+)\(([^,]*),?([^)]*)\)'  # Captura un primer argumento y un segundo opcional
         line_number = 1
@@ -238,10 +327,18 @@ def simulate_stream():
 
 
                     if operation_type == "new":
+=======
+                    #print(f'Operation: {operation_type}, First Arg: {first_arg}, Second Arg: {second_arg}')
+
+                    # Ejecutar la operación según el tipo
+                    if operation_type == "new":
+                        # Ejecutar la operación new en la MMU con pid y tamaño
+>>>>>>> Stashed changes
                         
                         MMU1.new(first_arg, second_arg)  # first_arg = pid, second_arg = size
                         MMU2.new(first_arg, second_arg)
                     elif operation_type == "use":
+<<<<<<< Updated upstream
                         MMU1.use(first_arg)  # first_arg = puntero (ptr)
                         MMU2.use(first_arg)
                     elif operation_type == "delete":
@@ -273,9 +370,40 @@ def simulate_stream():
                 print(f"Error message: {e}")
                 traceback.print_exc()
 
-        
+=======
+                        # Ejecutar la operación use en la MMU con el puntero
+                        MMU1.use(first_arg)  # first_arg = puntero (ptr)
+                        MMU2.use(first_arg)
+                    elif operation_type == "delete":
+                        # Ejecutar la operación delete en la MMU con el puntero
+                        MMU1.delete(first_arg)  # first_arg = puntero (ptr)
+                        MMU2.delete(first_arg)
+                    elif operation_type == "kill":
+                        # Ejecutar la operación kill en la MMU con pid
+                        MMU1.kill(first_arg)  # first_arg = pid
+                        MMU2.kill(first_arg)
 
+                    
+                    #MMU1.imprimir_atributos()
+                    mmu_state = {
+                        'opt': MMU1.get_pages_state(),  # Obtener el estado del algoritmo OPT
+                        'alg': MMU2.get_pages_state(),  # Obtener el estado de otro algoritmo
+                        'summary_1': MMU1.get_summary_1(),  # Resumen 1
+                        'summary_2': MMU2.get_summary_1(),   # Resumen 2
+                        'current_operation': f"{line_number}: {operation}"
+                    }
+                    # Enviar los datos en formato SSE (Server-Sent Events) al cliente
+                    #print(mmu_state)
+                    # Simular el tiempo entre cada operación
+                    line_number += 1
+                    time.sleep(0.2)
+                    paused = True
+                    yield f"data:{json.dumps(mmu_state)}\n\n"
+>>>>>>> Stashed changes
+        
+    count+=1;    
     return Response(generate(), mimetype='text/event-stream')
+
 
 @app.route('/download/<filename>')
 def download_file(filename):

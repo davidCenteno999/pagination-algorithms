@@ -4,7 +4,7 @@ class MMU:
         self.size_RAM = size_RAM # 400KB -> 100 paginas
         self.size_pagina = size_pagina # 4KB 
         self.cantidadMaximaPaginas = self.size_RAM//self.size_pagina
-        self.memoria_real = [None] * (self.cantidadMaximaPaginas) 
+        self.memoria_real = []
         self.memoria_virtual = []
         self.contador_paginas = 0
         self.map_memoria = {} #ptr asociado a sus paginas {ptr:[page1,pg2,pg3]}
@@ -21,7 +21,11 @@ class MMU:
         self.used_RAM = 0
         self.used_VRAM = 0
         self.used_pages = []
+        self.cant_used_pages = 0
         self.future_pages = []
+        self.fifoList = []
+        self.fragmentacion = 0
+        self.future_pages_aux = []
 
 
     
@@ -41,21 +45,23 @@ class MMU:
         self.total_punteros+=1
         paginas = []
         for i in range(numero_paginas):
-            pagina = Pagina(self.obtener_id_pagina(),None,-1,0,pid,ptr,self.simTime)
+            pagina = Pagina(self.obtener_id_pagina(),None,-1,0,pid,ptr,self.simTime,(round((numero_paginas*4096)-size)))
             if self.paginas_real < (self.cantidadMaximaPaginas):
                 self.used_RAM+=4
                 dir = self.paginas_real
                 pagina.bandera = True
                 pagina.direccion = dir
-                self.memoria_real[dir] = pagina
+                self.memoria_real.append(pagina)
+                self.fifoList.append(pagina)
                 self.paginas_real+=1
                 self.total_paginas+=1
+                self.fragmentacion += pagina.fragmentacion
                 
             else:
                 self.used_VRAM+=round(size/4096)
                 pagina.bandera = False
                 self.memoria_virtual.append(pagina)
-                self.total_paginas+=4
+                self.total_paginas+=1
             paginas.append(pagina)
             
         self.map_memoria[ptr] = paginas
@@ -76,22 +82,28 @@ class MMU:
         if ptr in self.map_memoria:
             paginas = self.map_memoria[ptr]
             for pagina in paginas:
+                if(self.tipoAlgoritmo==4):
+                    del self.future_pages[0]
+                self.cant_used_pages+=1
                 pagina.mark = 1
-                print("TAMANO")
-                print(len(paginas))
                 if not pagina.bandera:
-                    print("PAGINA USAR")
-                    print(pagina)
                     self.intercambio_paginas(pagina)
                     self.simTime+=5
                     self.thrashing_time+=5
-
+                else:
+                    self.simTime+=1
                 self.used_pages.append(pagina)
+<<<<<<< Updated upstream
                 if(len(self.future_pages)>0):
                     self.future_pages.pop(0)
                 self.simTime+=1
+=======
+                self.future_pages_aux.append(pagina.id)
+                
+                
+>>>>>>> Stashed changes
         else:
-            print("Punetero no encontrado.")
+            return
 
     #delete(ptr)
     def delete(self,ptr):
@@ -99,17 +111,25 @@ class MMU:
             paginas = self.map_memoria.pop(ptr)
             for pagina in paginas:
                 if pagina.bandera:
-                    #self.memoria_real[pagina.direccion] = None
-                    self.memoria_real[pagina.direccion] = None
-                    self.paginas_real-=1
-                    self.total_paginas-=1
-                    self.used_RAM-=4
+                    if(pagina in self.memoria_real):
+                        self.memoria_real.remove(pagina)
+                        self.paginas_real-=1
+                        self.total_paginas-=1
+                        self.used_RAM-=4
+                        self.fifoList.remove(pagina)
+                        self.fragmentacion-=pagina.fragmentacion
                 else:
-                    self.memoria_virtual.remove(pagina)
-                    self.total_paginas-=1
-                    self.used_VRAM-=4
+                    if(pagina in self.memoria_virtual):
+                        self.memoria_virtual.remove(pagina)
+                        self.total_paginas-=1
+                        self.used_VRAM-=4
 
+<<<<<<< Updated upstream
             pid = self.punteros[ptr] # Encontrar el proceso asociado al ptr
+=======
+        pid = self.punteros[ptr] # Encontrar el proceso asociado al ptr
+        if pid in self.procesos:
+>>>>>>> Stashed changes
             self.procesos[pid].remove(ptr) #Eliminar ptr del proceso
     
     def kill (self, pid): 
@@ -135,10 +155,9 @@ class MMU:
     #------------------------------------------------------------
     def fifo(self,pagina):
         self.memoria_virtual.remove(pagina)
-        for page in self.memoria_real:
-            if page:
-                pagina_remplazo = page
-                break 
+        pagina_remplazo = self.fifoList.pop(0)
+        self.memoria_real.remove(pagina_remplazo)
+
         pagina.direccion = pagina_remplazo.direccion
         pagina.bandera = True
         pagina_remplazo.direccion = None
@@ -146,11 +165,7 @@ class MMU:
 
         self.memoria_real.append(pagina)
         self.memoria_virtual.append(pagina_remplazo)
-
-
-        #self.actualizar_memoria_virtual(pagina_remplazo, pagina_remplazo.id)
-        #self.actualizar_map(pagina,ptr)
-        #self.actualizar_map(pagina_remplazo,None)
+        self.fifoList.append(pagina)
 
     def sc(self, pagina):
         # Recorre las páginas en memoria real para encontrar una que reemplazar
@@ -169,7 +184,8 @@ class MMU:
         self.memoria_virtual.remove(pagina)
         if self.used_pages != []:
             pagina_remplazo = self.used_pages.pop()
-            self.memoria_real.remove(pagina_remplazo)
+            if pagina_remplazo in self.memoria_real:
+                self.memoria_real.remove(pagina_remplazo)
         else:
             pagina_remplazo = self.memoria_real.pop(0)
         
@@ -178,8 +194,9 @@ class MMU:
         pagina_remplazo.direccion = None
         pagina_remplazo.bandera = False
 
-        self.memoria_real.insert(pagina_remplazo.direccion,pagina)
+        self.memoria_real.append(pagina)
         self.memoria_virtual.append(pagina_remplazo)
+        self.fifoList.append(pagina)
 
     def rnd(self,pagina):
         self.memoria_virtual.remove(pagina)
@@ -191,41 +208,54 @@ class MMU:
         pagina_remplazo.direccion = None
         pagina_remplazo.bandera = False
 
-        self.memoria_real.insert(indice_remplazo,pagina)
+        self.memoria_real.append(pagina)
         self.memoria_virtual.append(pagina_remplazo)
+        self.fifoList.append(pagina)
 
-
-    def opt(self, pagina):
-        print("PAGINA ELIMINAR")
-        print(pagina)
+    def fifo(self,pagina):
         self.memoria_virtual.remove(pagina)
-        pagina_remplazo = self.opt_out_page()
+        pagina_remplazo = self.fifoList.pop(0)
         self.memoria_real.remove(pagina_remplazo)
+
         pagina.direccion = pagina_remplazo.direccion
         pagina.bandera = True
         pagina_remplazo.direccion = None
         pagina_remplazo.bandera = False
 
+        self.memoria_real.append(pagina)
+        self.memoria_virtual.append(pagina_remplazo)
+        self.fifoList.append(pagina)
+
+    def opt(self, pagina):
+        self.memoria_virtual.remove(pagina)
+        pagina_remplazo = self.opt_out_page()
+        self.memoria_real.remove(pagina_remplazo)
+
+        pagina.direccion = pagina_remplazo.direccion
+        pagina.bandera = True
+        pagina_remplazo.direccion = None
+        pagina_remplazo.bandera = False
+
+        self.memoria_virtual.append(pagina_remplazo)
+        self.memoria_real.append(pagina)
+        self.fifoList.append(pagina)
+
+
     def opt_out_page(self): #Falta optimizar, mientras se usa un pagina quitarla del array de futuras paginas a usar
         out_page = None
         out_index = -1
         for pagina in self.memoria_real:
-            if pagina:
-                page_found=0
-                for i in range(0,len(self.future_pages)):
-
-                    if(self.future_pages[0] == pagina.id):
-                        page_found=1
-                        if(out_index < i):
-                            out_index = i
-                            out_page = pagina
-                        continue
-                if(page_found==0):
-                    out_index = -1
-                    out_page = pagina
-                    break
-        print("PAGINA SALIDA:")
-        print(out_page)
+            if pagina.id not in self.future_pages:
+                out_page = pagina
+                break
+            i = self.future_pages.index(pagina.id)
+            if(out_index < i):
+                out_index = i
+                out_page = pagina
+                    
+        #print("PAGINA SALIDA:")
+        #print(out_page)
+        
         return out_page
 
     #-------------------------------------------------------------
@@ -295,9 +325,9 @@ class MMU:
                 print(f"    Puntero: {ptr}")
 
         # Imprime punteros
-        print("\nPunteros (ptr -> pid):")
-        for ptr, pid in self.punteros.items():
-            print(f"  Puntero {ptr}: Proceso {pid}")
+        #print("\nPunteros (ptr -> pid):")
+        #for ptr, pid in self.punteros.items():
+        #    print(f"  Puntero {ptr}: Proceso {pid}")
             
 
     
@@ -315,28 +345,54 @@ class MMU:
     
     def get_summary_1(self):
         # Resumen personalizado
+        algoritmo = ""
+        if (self.tipoAlgoritmo == 0):
+            algoritmo = "FIFO"
+        elif (self.tipoAlgoritmo == 1):
+            algoritmo = "SC"
+        elif (self.tipoAlgoritmo == 2):
+            algoritmo = "MRU"
+        elif (self.tipoAlgoritmo == 3):
+            algoritmo = "RND"
+        else:
+            algoritmo = "Optimo"
+        
+        thrashingP = 0
+        if (self.simTime != 0):
+            thrashingP = (self.thrashing_time / self.simTime) * 100
+
+        
         return {
             'total_pages': self.total_paginas,
+            'unloaded_pages': len(self.memoria_virtual),
             'free_frames': 0,
             'loaded_pages': self.paginas_real,
             'processes': self.total_procesos,
             'simTime': self.simTime,
             'thrashing': self.thrashing_time,
+            'thrashingP': thrashingP,
             'usedRam': self.used_RAM,
             'usedRamPer': (self.used_RAM/self.size_RAM)*100,
-            'usedVRam': self.used_VRAM
+            'usedVRam': self.used_VRAM,
+            'algorithm': algoritmo,
+            'paginas_usadas': self.cant_used_pages,
+            'fragmentacion': self.fragmentacion//4096
 
         }
         
     def get_summary_2(self):
         # Otro resumen personalizado
         return {
+<<<<<<< Updated upstream
             'used_frames': self.paginas_ocupadas_memoria_real(),
             'algorithm': self.tipoAlgoritmo
+=======
+            
+>>>>>>> Stashed changes
         }
 
 class Pagina:
-    def __init__(self, id, direccion, bandera, mark, pid, ptr, loadTime):
+    def __init__(self, id, direccion, bandera, mark, pid, ptr, loadTime, fragmentacion):
         self.id = id
         self.direccion = direccion
         self.bandera = bandera
@@ -344,6 +400,7 @@ class Pagina:
         self.pid = pid
         self.ptr = ptr
         self.loadTime = loadTime
+        self.fragmentacion = fragmentacion
     
     
     def __str__(self):
